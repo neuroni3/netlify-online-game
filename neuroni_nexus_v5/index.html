@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Neuroni Nexus V5 – Tasohaku 1v1</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(13, 26, 48, 0.94);
+      --line: rgba(145, 197, 255, 0.22);
+      --cyan: #4de7ff;
+      --blue: #5f7cff;
+      --pink: #ff5fd1;
+      --yellow: #ffe66d;
+      --green: #79ffb3;
+      --red: #ff657a;
+      --text: #f5fbff;
+      --muted: #a9bad2;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+      touch-action: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(77, 231, 255, 0.16), transparent 26%),
+        radial-gradient(circle at 82% 18%, rgba(255, 95, 209, 0.13), transparent 25%),
+        radial-gradient(circle at 55% 90%, rgba(95, 124, 255, 0.17), transparent 34%);
+      z-index: 0;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      transform: none !important;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    #gameCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: transparent;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      transition: opacity 180ms ease, visibility 180ms ease;
+    }
+
+    .hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.45), inset 0 1px rgba(255,255,255,0.06);
+      backdrop-filter: blur(18px);
+    }
+
+    #menuCard {
+      width: min(1020px, 96vw);
+      max-height: 94vh;
+      overflow: auto;
+      border-radius: 28px;
+      padding: 28px;
+    }
+
+    .brandRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(32px, 6vw, 68px);
+      line-height: 0.92;
+      letter-spacing: -0.055em;
+      text-shadow: 0 0 34px rgba(77, 231, 255, 0.24);
+    }
+
+    .brand h1 span { color: var(--cyan); }
+
+    .brand p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .statsBadge {
+      min-width: 160px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid var(--line);
+      text-align: right;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .statsBadge strong {
+      color: var(--yellow);
+      font-size: 21px;
+    }
+
+    .menuGrid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+    }
+
+    .panel {
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.035);
+      padding: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .nameRow {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 900;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      outline: 0;
+      padding: 13px 14px;
+      background: rgba(2, 10, 23, 0.8);
+      color: var(--text);
+      font-weight: 800;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 4px rgba(77, 231, 255, 0.1);
+    }
+
+    .heroGrid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .heroCard {
+      position: relative;
+      overflow: hidden;
+      min-height: 118px;
+      text-align: left;
+      border-radius: 17px;
+      padding: 13px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid var(--line);
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .heroCard:hover { transform: translateY(-2px); }
+
+    .heroCard.selected {
+      border-color: var(--cyan);
+      background: rgba(77, 231, 255, 0.11);
+      box-shadow: 0 0 0 3px rgba(77, 231, 255, 0.08);
+    }
+
+    .heroIcon {
+      font-size: 29px;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.28));
+    }
+
+    .heroCard b {
+      display: block;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+
+    .heroCard small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .buttonStack { display: grid; gap: 10px; }
+
+    .bigButton {
+      width: 100%;
+      border-radius: 16px;
+      padding: 15px 17px;
+      font-weight: 1000;
+      letter-spacing: 0.01em;
+      background: linear-gradient(135deg, var(--blue), #8a5fff);
+      box-shadow: 0 12px 28px rgba(95, 124, 255, 0.22);
+      transition: transform 140ms ease, filter 140ms ease;
+    }
+
+    .bigButton:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .bigButton:active { transform: translateY(1px) scale(0.99); }
+    .bigButton.cyan { background: linear-gradient(135deg, #159fc3, var(--cyan)); color: #04101c; }
+    .bigButton.pink { background: linear-gradient(135deg, #b742a6, var(--pink)); }
+    .bigButton.ghost { background: rgba(255,255,255,0.07); box-shadow: none; border: 1px solid var(--line); }
+    .bigButton.danger { background: linear-gradient(135deg, #c93852, var(--red)); }
+
+    .hintBox {
+      margin-top: 13px;
+      padding: 13px;
+      border-radius: 14px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .keyTip {
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    kbd {
+      display: inline-grid;
+      place-items: center;
+      min-width: 25px;
+      height: 25px;
+      padding: 0 6px;
+      border-radius: 7px;
+      background: #f2f7ff;
+      color: #07111f;
+      font-weight: 1000;
+      box-shadow: 0 3px 0 #8595ab;
+      margin-right: 4px;
+    }
+
+    #roomScreen .roomCard,
+    #joinScreen .roomCard,
+    #gameOverScreen .roomCard,
+    #pauseScreen .roomCard {
+      width: min(520px, 94vw);
+      border-radius: 26px;
+      padding: 26px;
+      text-align: center;
+    }
+
+    .roomCard h2 { margin: 0 0 8px; font-size: 28px; }
+    .roomCard p { color: var(--muted); font-weight: 700; line-height: 1.45; }
+
+    #roomCodeDisplay {
+      margin: 20px 0 12px;
+      font-size: clamp(40px, 10vw, 72px);
+      font-weight: 1000;
+      letter-spacing: 0.14em;
+      color: var(--yellow);
+      text-shadow: 0 0 30px rgba(255,230,109,0.28);
+    }
+
+    .statusDot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 0 15px currentColor;
+      margin-right: 7px;
+      animation: pulse 1.2s infinite alternate;
+    }
+
+    @keyframes pulse { to { opacity: .35; transform: scale(.8); } }
+
+    .joinActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    #joinCodeInput {
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 24px;
+      margin: 14px 0;
+    }
+
+    #hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .topHud {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .playerHud {
+      width: min(370px, 38vw);
+      border-radius: 16px;
+      padding: 10px 12px;
+      background: rgba(4, 12, 26, 0.84);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+    }
+
+    .playerHud.right { justify-self: end; text-align: right; }
+
+    .playerNameRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 1000;
+    }
+
+    .right .playerNameRow { flex-direction: row-reverse; }
+
+    .roundPips { color: var(--yellow); letter-spacing: 0.12em; }
+
+    .bar {
+      position: relative;
+      height: 15px;
+      border-radius: 99px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .barFill {
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
+      transition: width 90ms linear;
+      background: linear-gradient(90deg, #35d388, var(--green));
+    }
+
+    .right .barFill { margin-left: auto; }
+
+    .ultBar { height: 7px; margin-top: 6px; }
+    .ultBar .barFill { background: linear-gradient(90deg, #f4b849, var(--yellow)); }
+
+    #centerHud {
+      min-width: 122px;
+      text-align: center;
+      border-radius: 15px;
+      padding: 9px 14px;
+      background: rgba(4, 12, 26, 0.84);
+      border: 1px solid var(--line);
+      font-weight: 1000;
+    }
+
+    #timerText { font-size: 22px; }
+    #connectionText { color: var(--muted); font-size: 10px; margin-top: 3px; letter-spacing: .08em; text-transform: uppercase; }
+
+    #abilityHud {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .ability {
+      width: 88px;
+      min-height: 66px;
+      border-radius: 15px;
+      padding: 9px;
+      text-align: center;
+      background: rgba(4, 12, 26, 0.86);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+    }
+
+    .ability.ready { border-color: var(--yellow); box-shadow: 0 0 22px rgba(255,230,109,0.18); }
+    .abilityKey { font-size: 11px; color: var(--muted); font-weight: 900; }
+    .abilityName { font-size: 12px; font-weight: 1000; margin-top: 3px; }
+    .abilityCd { font-size: 18px; font-weight: 1000; color: var(--cyan); margin-top: 2px; }
+
+    #roundBanner {
+      position: absolute;
+      left: 50%;
+      top: 22%;
+      transform: translate(-50%, -50%) scale(0.92);
+      padding: 15px 28px;
+      border-radius: 17px;
+      background: rgba(4, 12, 26, 0.88);
+      border: 1px solid var(--line);
+      font-size: clamp(25px, 5vw, 52px);
+      font-weight: 1000;
+      letter-spacing: -0.04em;
+      opacity: 0;
+      transition: opacity 180ms ease, transform 180ms ease;
+      text-align: center;
+    }
+
+    #roundBanner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+    #toast {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translate(-50%, -20px);
+      max-width: min(500px, 90vw);
+      padding: 12px 18px;
+      border-radius: 14px;
+      background: rgba(6, 16, 32, 0.95);
+      border: 1px solid var(--line);
+      font-weight: 900;
+      text-align: center;
+      opacity: 0;
+      transition: 180ms ease;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .tiny { font-size: 12px; color: var(--muted); }
+    .dangerText { color: var(--red) !important; }
+
+    /* Puhelimen kosketusohjaimet */
+    #mobileControls {
+      position: absolute;
+      inset: 0;
+      z-index: 35;
+      display: none;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html.touch-device #mobileControls:not(.hidden) { display: block; }
+
+    #movePad {
+      position: absolute;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: 132px;
+      height: 132px;
+      border-radius: 50%;
+      pointer-events: auto;
+      touch-action: none;
+      background: rgba(4, 12, 26, 0.55);
+      border: 2px solid rgba(77, 231, 255, 0.42);
+      box-shadow: 0 10px 34px rgba(0,0,0,.4), inset 0 0 28px rgba(77,231,255,.08);
+      backdrop-filter: blur(7px);
+    }
+
+    #movePad::before, #movePad::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      background: rgba(255,255,255,.11);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    #movePad::before { width: 70%; height: 2px; }
+    #movePad::after { width: 2px; height: 70%; }
+
+    #moveStick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at 35% 30%, #bff7ff, var(--cyan) 42%, #148ca8 100%);
+      border: 2px solid rgba(255,255,255,.72);
+      box-shadow: 0 7px 20px rgba(0,0,0,.38), 0 0 22px rgba(77,231,255,.35);
+      pointer-events: none;
+      transition: box-shadow 90ms ease;
+    }
+
+    #movePad.active #moveStick { box-shadow: 0 7px 20px rgba(0,0,0,.4), 0 0 34px rgba(77,231,255,.68); }
+
+    #mobileActions {
+      position: absolute;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+      width: 194px;
+      height: 154px;
+      pointer-events: none;
+    }
+
+    .touchButton {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      pointer-events: auto;
+      touch-action: none;
+      color: white;
+      font-weight: 1000;
+      text-shadow: 0 2px 4px rgba(0,0,0,.55);
+      border: 2px solid rgba(255,255,255,.55);
+      box-shadow: 0 9px 25px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.35);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 70ms ease, filter 70ms ease, opacity 120ms ease;
+    }
+
+    .touchButton:active, .touchButton.pressed { transform: scale(.88); filter: brightness(1.3); }
+    .touchButton small { display: block; font-size: 9px; line-height: 1; opacity: .9; }
+    .touchButton strong { display: block; font-size: 16px; line-height: 1.05; }
+
+    #fireTouchBtn {
+      right: 0;
+      bottom: 0;
+      width: 92px;
+      height: 92px;
+      background: radial-gradient(circle at 35% 30%, #ffb8ea, var(--pink) 45%, #a81a75 100%);
+      font-size: 17px;
+    }
+
+    #skillTouchBtn {
+      left: 16px;
+      bottom: 0;
+      width: 68px;
+      height: 68px;
+      background: radial-gradient(circle at 35% 30%, #bff7ff, var(--cyan) 45%, #147c98 100%);
+    }
+
+    #ultTouchBtn {
+      left: 59px;
+      top: 0;
+      width: 72px;
+      height: 72px;
+      background: radial-gradient(circle at 35% 30%, #fff8bd, var(--yellow) 45%, #b57c08 100%);
+      color: #172033;
+      text-shadow: none;
+    }
+
+    #ultTouchBtn.notReady { opacity: .55; filter: grayscale(.35); }
+    #skillTouchBtn.notReady { opacity: .62; filter: grayscale(.25); }
+
+    #mobileHint {
+      position: absolute;
+      left: 50%;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      padding: 6px 10px;
+      border-radius: 99px;
+      background: rgba(4,12,26,.58);
+      border: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,255,255,.72);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      pointer-events: none;
+    }
+
+
+    .statsTopLine, .statsMiniLine {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 6px;
+    }
+    .rankChip {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255,230,109,.18), rgba(255,95,209,.14));
+      border: 1px solid rgba(255,230,109,.25);
+      color: var(--yellow);
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: .06em;
+    }
+    .xpTrack {
+      width: 100%;
+      height: 9px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    #xpFill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      box-shadow: 0 0 18px rgba(77,231,255,.55);
+      transition: width .35s ease;
+    }
+    #xpText { display:block; margin-top:5px; font-size:10px; color:var(--muted); }
+    .profileExtras {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: stretch;
+      margin-top: 14px;
+    }
+    .dailyButton {
+      min-width: 126px;
+      padding: 11px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255,230,109,.2), rgba(255,95,209,.18));
+      border: 1px solid rgba(255,230,109,.24);
+      font-weight: 950;
+    }
+    .historyBox {
+      min-width: 0;
+      padding: 9px 11px;
+      border-radius: 14px;
+      background: rgba(4,12,26,.42);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .historyBox b { display:block; margin-bottom:6px; color:var(--muted); font-size:11px; }
+    #historyList { display:flex; gap:6px; flex-wrap:wrap; }
+    .historyPip {
+      width: 26px;
+      height: 26px;
+      display:grid;
+      place-items:center;
+      border-radius:9px;
+      font-size:12px;
+      font-weight:1000;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.05);
+    }
+    .historyPip.win { color:var(--green); background:rgba(121,255,179,.1); }
+    .historyPip.loss { color:var(--red); background:rgba(255,101,122,.1); }
+    .gold {
+      color:#1b1422 !important;
+      background:linear-gradient(135deg, #ffe66d, #ff9f43) !important;
+      box-shadow:0 12px 28px rgba(255,190,75,.24) !important;
+    }
+    #matchScreen .roomCard { width:min(470px, 94vw); text-align:center; }
+    .searchOrb {
+      width:96px;
+      height:96px;
+      margin:0 auto 16px;
+      display:grid;
+      place-items:center;
+      border-radius:50%;
+      font-size:42px;
+      background:radial-gradient(circle, rgba(77,231,255,.3), rgba(95,124,255,.09));
+      border:2px solid rgba(77,231,255,.42);
+      box-shadow:0 0 45px rgba(77,231,255,.25);
+      animation:searchPulse 1.25s ease-in-out infinite;
+    }
+    @keyframes searchPulse {
+      0%,100% { transform:scale(.94) rotate(-5deg); box-shadow:0 0 25px rgba(77,231,255,.18); }
+      50% { transform:scale(1.08) rotate(5deg); box-shadow:0 0 60px rgba(255,95,209,.30); }
+    }
+    .searchStats {
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:8px;
+      margin:16px 0;
+    }
+    .searchStat {
+      padding:10px 7px;
+      border-radius:13px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--muted);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+    .searchStat strong { display:block; margin-top:4px; color:var(--text); font-size:17px; }
+    #dangerVignette {
+      position:absolute;
+      inset:0;
+      z-index:7;
+      pointer-events:none;
+      opacity:0;
+      background:radial-gradient(circle, transparent 48%, rgba(255,25,65,.18) 76%, rgba(255,0,45,.48) 115%);
+      transition:opacity .16s ease;
+    }
+    .rewardLine { margin-top:9px; color:var(--yellow); font-weight:900; }
+
+    @media (max-width: 760px) {
+      #menuCard { padding: 18px; }
+      .brandRow { align-items: flex-start; }
+      .statsBadge { min-width: 152px; }
+      .profileExtras { grid-template-columns: 1fr; }
+      .dailyButton { width:100%; }
+      .menuGrid { grid-template-columns: 1fr; }
+      .heroGrid { grid-template-columns: repeat(2, 1fr); }
+      .keys { grid-template-columns: 1fr; }
+      .topHud { grid-template-columns: 1fr 74px 1fr; gap: 7px; padding: 8px; }
+      .playerHud { width: 100%; padding: 7px; }
+      .playerNameRow { font-size: 10px; }
+      #centerHud { min-width: 70px; padding: 7px 5px; }
+      #timerText { font-size: 16px; }
+      .ability { width: 72px; min-height: 58px; padding: 7px; }
+      .abilityName { font-size: 10px; }
+      .abilityCd { font-size: 15px; }
+      html.touch-device #abilityHud { bottom: 166px; transform: translateX(-50%) scale(.86); transform-origin: bottom center; }
+      html.touch-device #roundBanner { top: 30%; }
+      #mobileHint { display: none; }
+    }
+
+    @media (orientation: portrait) and (max-width: 760px) {
+      #movePad { width: 116px; height: 116px; }
+      #moveStick { width: 52px; height: 52px; }
+      #mobileActions { width: 176px; height: 142px; }
+      #fireTouchBtn { width: 84px; height: 84px; }
+      #skillTouchBtn { width: 62px; height: 62px; }
+      #ultTouchBtn { width: 66px; height: 66px; left: 54px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="gameCanvas" aria-label="Neuroni Nexus -pelialue"></canvas>
+
+    <section id="menuScreen" class="screen">
+      <div id="menuCard" class="glass">
+        <div class="brandRow">
+          <div class="brand">
+            <h1>NEURONI <span>NEXUS</span></h1>
+            <p>Tasohaku, levelit ja nopea online 1v1</p>
+          </div>
+          <div class="statsBadge">
+            <div class="statsTopLine"><span id="rankText" class="rankChip">PRONSSI</span><strong id="levelText">Taso 1</strong></div>
+            <div class="statsMiniLine"><span>🏆 <strong id="ratingText">500</strong></span><span>🔥 <strong id="streakText">0</strong></span></div>
+            <div class="statsMiniLine"><span>Voitot <strong id="winsText">0</strong></span><span>Kolikot <strong id="coinsText">0</strong></span></div>
+            <div class="xpTrack"><div id="xpFill"></div></div>
+            <small id="xpText">0 / 100 XP</small>
+          </div>
+        </div>
+
+        <div class="menuGrid">
+          <div class="panel">
+            <h2>1. Valitse taistelija</h2>
+            <div class="nameRow">
+              <label for="nameInput">Pelaajanimi</label>
+              <input id="nameInput" maxlength="16" autocomplete="off" value="Roni" aria-label="Pelaajanimi">
+            </div>
+            <div id="heroGrid" class="heroGrid">
+              <button class="heroCard selected" data-hero="bolt">
+                <span class="heroIcon">⚡</span><b>Salama</b><small>Nopea ampuja. E = megasyöksy.</small>
+              </button>
+              <button class="heroCard" data-hero="tank">
+                <span class="heroIcon">🛡️</span><b>Tankki</b><small>Paljon elämää. E = vahva kilpi.</small>
+              </button>
+              <button class="heroCard" data-hero="ghost">
+                <span class="heroIcon">👻</span><b>Haamu</b><small>Vaihetila väistää ammukset.</small>
+              </button>
+              <button class="heroCard" data-hero="magnet">
+                <span class="heroIcon">🧲</span><b>Magneetti</b><small>Vetää vihollisen lähemmäs.</small>
+              </button>
+            </div>
+            <div class="profileExtras">
+              <button id="dailyRewardBtn" class="dailyButton">🎁 Päivän bonus<br><small id="dailyRewardText">Nouda 50 kolikkoa</small></button>
+              <div class="historyBox"><b>VIIME OTTELUT</b><div id="historyList"><span class="tiny">Ei otteluita vielä</span></div></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>2. Valitse pelitapa</h2>
+            <div class="buttonStack">
+              <button id="findMatchBtn" class="bigButton gold">⚔️ Etsi saman tasoinen pelaaja</button>
+              <button id="createRoomBtn" class="bigButton cyan">🌐 Luo online-huone</button>
+              <button id="openJoinBtn" class="bigButton pink">🔑 Liity huonekoodilla</button>
+              <button id="practiceBtn" class="bigButton">🤖 Harjoittele bottia vastaan</button>
+            </div>
+            <div class="hintBox">
+              Tasohaku etsii ensin lähes samantasoisen ja saman ratingin pelaajan. Jos ketään ei löydy, hakualuetta kasvatetaan hitaasti. Huonekoodilla voit edelleen haastaa kaverin suoraan.
+            </div>
+            <div class="keys">
+              <div class="keyTip"><kbd>WASD</kbd> tai nuolet = liiku</div>
+              <div class="keyTip"><kbd>Hiiri</kbd> = tähtää ja ammu</div>
+              <div class="keyTip"><kbd>E</kbd> = erikoiskyky</div>
+              <div class="keyTip"><kbd>Q</kbd> = hyper, kun täynnä</div>
+              <div class="keyTip">📱 Puhelimella joystick + isot toimintanapit</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="matchScreen" class="screen hidden">
+      <div class="roomCard glass">
+        <div class="searchOrb">⚔️</div>
+        <h2>Etsitään sopivaa vastustajaa…</h2>
+        <p id="matchStatus">Palvelin etsii mahdollisimman samantasoista pelaajaa.</p>
+        <div class="searchStats">
+          <div class="searchStat">Aika<strong id="searchTimeText">0 s</strong></div>
+          <div class="searchStat">Tasoväli<strong id="searchRangeText">±1</strong></div>
+          <div class="searchStat">Jonossa<strong id="queuePlayersText">1</strong></div>
+        </div>
+        <p class="tiny">Oma tasosi: <b id="ownSearchLevel">1</b> • Rating: <b id="ownSearchRating">500</b></p>
+        <button id="cancelMatchBtn" class="bigButton ghost">Peruuta haku</button>
+      </div>
+    </section>
+
+    <section id="roomScreen" class="screen hidden">
+      <div class="roomCard glass">
+        <h2>Online-huone luotu!</h2>
+        <p>Lähetä tämä koodi kaverille:</p>
+        <div id="roomCodeDisplay">------</div>
+        <p id="roomStatus"><span class="statusDot"></span>Odotetaan toista pelaajaa…</p>
+        <div class="buttonStack">
+          <button id="copyCodeBtn" class="bigButton cyan">Kopioi koodi</button>
+          <button id="cancelRoomBtn" class="bigButton ghost">Peruuta</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="joinScreen" class="screen hidden">
+      <div class="roomCard glass">
+        <h2>Liity taisteluun</h2>
+        <p>Kirjoita kaverin antama huonekoodi.</p>
+        <input id="joinCodeInput" maxlength="6" placeholder="ABC123" autocomplete="off" aria-label="Huonekoodi">
+        <p id="joinStatus" class="tiny">Koodi on 6 merkkiä.</p>
+        <div class="joinActions">
+          <button id="cancelJoinBtn" class="bigButton ghost">Takaisin</button>
+          <button id="joinRoomBtn" class="bigButton pink">Liity</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="hud" class="hidden">
+      <div class="topHud">
+        <div class="playerHud">
+          <div class="playerNameRow"><span id="p0Name">Pelaaja 1</span><span id="p0Rounds" class="roundPips">○○○</span></div>
+          <div class="bar"><div id="p0Hp" class="barFill"></div></div>
+          <div class="bar ultBar"><div id="p0Ult" class="barFill"></div></div>
+        </div>
+        <div id="centerHud">
+          <div id="timerText">90</div>
+          <div id="connectionText">HARJOITUS</div>
+        </div>
+        <div class="playerHud right">
+          <div class="playerNameRow"><span id="p1Name">Pelaaja 2</span><span id="p1Rounds" class="roundPips">○○○</span></div>
+          <div class="bar"><div id="p1Hp" class="barFill"></div></div>
+          <div class="bar ultBar"><div id="p1Ult" class="barFill"></div></div>
+        </div>
+      </div>
+      <div id="abilityHud">
+        <div id="skillAbility" class="ability">
+          <div class="abilityKey">E</div>
+          <div id="skillName" class="abilityName">Syöksy</div>
+          <div id="skillCd" class="abilityCd">VALMIS</div>
+        </div>
+        <div id="ultAbility" class="ability">
+          <div class="abilityKey">Q</div>
+          <div id="ultName" class="abilityName">Ukkosmyrsky</div>
+          <div id="ultCd" class="abilityCd">0%</div>
+        </div>
+      </div>
+      <div id="roundBanner">ERÄ 1</div>
+    </div>
+
+    <div id="mobileControls" class="hidden" aria-label="Puhelimen peliohjaimet">
+      <div id="movePad" aria-label="Liikkumisjoystick">
+        <div id="moveStick"></div>
+      </div>
+      <div id="mobileActions">
+        <button id="skillTouchBtn" class="touchButton" type="button" aria-label="Erikoiskyky">
+          <span><strong>E</strong><small id="skillTouchText">KYKY</small></span>
+        </button>
+        <button id="ultTouchBtn" class="touchButton notReady" type="button" aria-label="Hyperkyky">
+          <span><strong>Q</strong><small id="ultTouchText">0%</small></span>
+        </button>
+        <button id="fireTouchBtn" class="touchButton" type="button" aria-label="Ammu">AMMU</button>
+      </div>
+      <div id="mobileHint">Joystick liikuttaa • AMMU tähtää automaattisesti</div>
+    </div>
+
+    <section id="gameOverScreen" class="screen hidden">
+      <div class="roomCard glass">
+        <h2 id="gameOverTitle">Voitto!</h2>
+        <p id="gameOverText">Hieno taistelu.</p>
+        <div class="buttonStack">
+          <button id="rematchBtn" class="bigButton cyan">Uusi ottelu</button>
+          <button id="backMenuBtn" class="bigButton ghost">Päävalikkoon</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="pauseScreen" class="screen hidden">
+      <div class="roomCard glass">
+        <h2>Peli tauolla</h2>
+        <p>Harjoituspeli pysähtyi.</p>
+        <div class="buttonStack">
+          <button id="resumeBtn" class="bigButton cyan">Jatka</button>
+          <button id="pauseMenuBtn" class="bigButton ghost">Päävalikkoon</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="dangerVignette"></div>
+    <div id="toast">Viesti</div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  (() => {
+    "use strict";
+
+    const TAU = Math.PI * 2;
+    const WORLD_W = 1280;
+    const WORLD_H = 720;
+    const ROUND_SECONDS = 90;
+    const WIN_ROUNDS = 3;
+    const NETWORK_RATE = 1 / 24;
+
+    const HEROES = {
+      bolt: {
+        name: "Salama", icon: "⚡", color: "#4de7ff", maxHp: 100, speed: 275,
+        damage: 16, bulletSpeed: 760, fireRate: 0.20, radius: 24,
+        skillName: "Megasyöksy", ultName: "Ukkosmyrsky", skillCooldown: 5.0
+      },
+      tank: {
+        name: "Tankki", icon: "🛡️", color: "#79ffb3", maxHp: 165, speed: 190,
+        damage: 25, bulletSpeed: 620, fireRate: 0.47, radius: 30,
+        skillName: "Energiakilpi", ultName: "Maanjäristys", skillCooldown: 7.5
+      },
+      ghost: {
+        name: "Haamu", icon: "👻", color: "#c590ff", maxHp: 105, speed: 245,
+        damage: 18, bulletSpeed: 700, fireRate: 0.29, radius: 24,
+        skillName: "Vaihetila", ultName: "Haamuräjähdys", skillCooldown: 6.5
+      },
+      magnet: {
+        name: "Magneetti", icon: "🧲", color: "#ff6fd8", maxHp: 128, speed: 218,
+        damage: 20, bulletSpeed: 665, fireRate: 0.34, radius: 26,
+        skillName: "Magneettiveto", ultName: "Mustan aukon ydin", skillCooldown: 7.0
+      }
+    };
+
+    const OBSTACLES = [
+      { x: 550, y: 250, w: 180, h: 70 },
+      { x: 240, y: 150, w: 100, h: 180 },
+      { x: 940, y: 390, w: 100, h: 180 },
+      { x: 285, y: 500, w: 170, h: 60 },
+      { x: 825, y: 160, w: 170, h: 60 }
+    ];
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d", { alpha: true });
+
+    const ui = {
+      menu: document.getElementById("menuScreen"),
+      match: document.getElementById("matchScreen"),
+      room: document.getElementById("roomScreen"),
+      join: document.getElementById("joinScreen"),
+      hud: document.getElementById("hud"),
+      over: document.getElementById("gameOverScreen"),
+      pause: document.getElementById("pauseScreen"),
+      name: document.getElementById("nameInput"),
+      wins: document.getElementById("winsText"),
+      coins: document.getElementById("coinsText"),
+      level: document.getElementById("levelText"),
+      rating: document.getElementById("ratingText"),
+      rank: document.getElementById("rankText"),
+      streak: document.getElementById("streakText"),
+      xpFill: document.getElementById("xpFill"),
+      xpText: document.getElementById("xpText"),
+      history: document.getElementById("historyList"),
+      dailyReward: document.getElementById("dailyRewardBtn"),
+      dailyRewardText: document.getElementById("dailyRewardText"),
+      matchStatus: document.getElementById("matchStatus"),
+      searchTime: document.getElementById("searchTimeText"),
+      searchRange: document.getElementById("searchRangeText"),
+      queuePlayers: document.getElementById("queuePlayersText"),
+      ownSearchLevel: document.getElementById("ownSearchLevel"),
+      ownSearchRating: document.getElementById("ownSearchRating"),
+      dangerVignette: document.getElementById("dangerVignette"),
+      roomCode: document.getElementById("roomCodeDisplay"),
+      roomStatus: document.getElementById("roomStatus"),
+      joinCode: document.getElementById("joinCodeInput"),
+      joinStatus: document.getElementById("joinStatus"),
+      pNames: [document.getElementById("p0Name"), document.getElementById("p1Name")],
+      pRounds: [document.getElementById("p0Rounds"), document.getElementById("p1Rounds")],
+      pHp: [document.getElementById("p0Hp"), document.getElementById("p1Hp")],
+      pUlt: [document.getElementById("p0Ult"), document.getElementById("p1Ult")],
+      timer: document.getElementById("timerText"),
+      connection: document.getElementById("connectionText"),
+      skillName: document.getElementById("skillName"),
+      skillCd: document.getElementById("skillCd"),
+      skillAbility: document.getElementById("skillAbility"),
+      ultName: document.getElementById("ultName"),
+      ultCd: document.getElementById("ultCd"),
+      ultAbility: document.getElementById("ultAbility"),
+      banner: document.getElementById("roundBanner"),
+      overTitle: document.getElementById("gameOverTitle"),
+      overText: document.getElementById("gameOverText"),
+      rematch: document.getElementById("rematchBtn"),
+      toast: document.getElementById("toast"),
+      mobileControls: document.getElementById("mobileControls"),
+      movePad: document.getElementById("movePad"),
+      moveStick: document.getElementById("moveStick"),
+      fireTouchBtn: document.getElementById("fireTouchBtn"),
+      skillTouchBtn: document.getElementById("skillTouchBtn"),
+      ultTouchBtn: document.getElementById("ultTouchBtn"),
+      skillTouchText: document.getElementById("skillTouchText"),
+      ultTouchText: document.getElementById("ultTouchText")
+    };
+
+    const profile = loadProfile();
+    ui.name.value = profile.name;
+    refreshProfileUI();
+
+    let selectedHero = profile.hero in HEROES ? profile.hero : "bolt";
+    let screenMode = "menu";
+    let matchMode = "none"; // none, queue, practice, host, client
+    let localPlayerIndex = 0;
+    let socket = null;
+    let manualSocketClose = false;
+    let currentRoomCode = "";
+    let paused = false;
+    let audioCtx = null;
+    let lastFrame = performance.now();
+    let networkTimer = 0;
+    let toastTimer = 0;
+    let rematchRequested = false;
+    let matchRewardGranted = false;
+    let lastMatchedBySearch = false;
+
+    const keys = Object.create(null);
+    const justPressed = new Set();
+    const mouse = { x: WORLD_W / 2, y: WORLD_H / 2, down: false };
+    const touchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window || window.matchMedia("(pointer: coarse)").matches;
+    document.documentElement.classList.toggle("touch-device", touchCapable);
+    const touchInput = {
+      moveX: 0, moveY: 0, fire: false, skillPulse: false, ultPulse: false,
+      movePointerId: null, firePointerId: null
+    };
+
+    let game = createEmptyGame();
+    let particles = [];
+    let shake = 0;
+
+    function xpNeededForLevel(level) {
+      return 100 + Math.max(0, level - 1) * 35;
+    }
+
+    function getLevelInfo(totalXp = profile.totalXp) {
+      let level = 1;
+      let remaining = Math.max(0, Math.floor(Number(totalXp) || 0));
+      while (level < 99) {
+        const needed = xpNeededForLevel(level);
+        if (remaining < needed) return { level, current: remaining, needed };
+        remaining -= needed;
+        level++;
+      }
+      return { level: 99, current: 0, needed: 1 };
+    }
+
+    function getRankName(rating) {
+      if (rating >= 2200) return "NEURONI-MESTARI";
+      if (rating >= 1800) return "TIMANTTI";
+      if (rating >= 1400) return "PLATINA";
+      if (rating >= 1050) return "KULTA";
+      if (rating >= 750) return "HOPEA";
+      return "PRONSSI";
+    }
+
+    function todayKey() {
+      const now = new Date();
+      return `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+    }
+
+    function loadProfile() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem("neuroniNexusProfile") || "{}");
+        return {
+          name: typeof parsed.name === "string" && parsed.name.trim() ? parsed.name.slice(0, 16) : "Roni",
+          hero: typeof parsed.hero === "string" ? parsed.hero : "bolt",
+          wins: Number.isFinite(parsed.wins) ? Math.max(0, Math.floor(parsed.wins)) : 0,
+          losses: Number.isFinite(parsed.losses) ? Math.max(0, Math.floor(parsed.losses)) : 0,
+          matches: Number.isFinite(parsed.matches) ? Math.max(0, Math.floor(parsed.matches)) : 0,
+          coins: Number.isFinite(parsed.coins) ? Math.max(0, Math.floor(parsed.coins)) : 0,
+          totalXp: Number.isFinite(parsed.totalXp) ? Math.max(0, Math.floor(parsed.totalXp)) : 0,
+          rating: Number.isFinite(parsed.rating) ? Math.max(0, Math.min(9999, Math.floor(parsed.rating))) : 500,
+          streak: Number.isFinite(parsed.streak) ? Math.max(0, Math.floor(parsed.streak)) : 0,
+          bestStreak: Number.isFinite(parsed.bestStreak) ? Math.max(0, Math.floor(parsed.bestStreak)) : 0,
+          lastDaily: typeof parsed.lastDaily === "string" ? parsed.lastDaily : "",
+          history: Array.isArray(parsed.history) ? parsed.history.slice(0, 5).map(item => ({
+            result: item && item.result === "W" ? "W" : "L",
+            opponent: sanitizeName(item && item.opponent),
+            score: String(item && item.score || "")
+          })) : []
+        };
+      } catch {
+        return { name: "Roni", hero: "bolt", wins: 0, losses: 0, matches: 0, coins: 0, totalXp: 0, rating: 500, streak: 0, bestStreak: 0, lastDaily: "", history: [] };
+      }
+    }
+
+    function refreshProfileUI() {
+      const info = getLevelInfo(profile.totalXp);
+      ui.wins.textContent = String(profile.wins);
+      ui.coins.textContent = String(profile.coins);
+      ui.level.textContent = "Taso " + info.level;
+      ui.rating.textContent = String(profile.rating);
+      ui.rank.textContent = getRankName(profile.rating);
+      ui.streak.textContent = String(profile.streak);
+      ui.xpFill.style.width = Math.max(0, Math.min(100, info.current / info.needed * 100)) + "%";
+      ui.xpText.textContent = `${info.current} / ${info.needed} XP • Paras putki ${profile.bestStreak}`;
+      ui.history.innerHTML = "";
+      if (!profile.history.length) {
+        const empty = document.createElement("span");
+        empty.className = "tiny";
+        empty.textContent = "Ei otteluita vielä";
+        ui.history.appendChild(empty);
+      } else {
+        for (const item of profile.history) {
+          const pip = document.createElement("span");
+          pip.className = "historyPip " + (item.result === "W" ? "win" : "loss");
+          pip.textContent = item.result === "W" ? "V" : "H";
+          pip.title = `${item.result === "W" ? "Voitto" : "Häviö"} ${item.opponent} ${item.score}`;
+          ui.history.appendChild(pip);
+        }
+      }
+      const claimed = profile.lastDaily === todayKey();
+      ui.dailyReward.disabled = claimed;
+      ui.dailyRewardText.textContent = claimed ? "Nouda taas huomenna" : "Nouda 50 kolikkoa";
+    }
+
+    function saveProfile() {
+      profile.name = sanitizeName(ui.name.value);
+      profile.hero = selectedHero;
+      try {
+        localStorage.setItem("neuroniNexusProfile", JSON.stringify(profile));
+      } catch {
+        // Peli jatkuu myös selaimissa, joissa tallennus on estetty.
+      }
+      refreshProfileUI();
+    }
+
+    function claimDailyReward() {
+      if (profile.lastDaily === todayKey()) {
+        showToast("Päivän bonus on jo noudettu.");
+        return;
+      }
+      profile.lastDaily = todayKey();
+      profile.coins += 50;
+      profile.totalXp += 20;
+      saveProfile();
+      showToast("🎁 Päivän bonus: +50 kolikkoa ja +20 XP!");
+      ensureAudio();
+      tone(760, .14, .04, "triangle");
+    }
+
+    function sanitizeName(value) {
+      const cleaned = String(value || "Pelaaja").replace(/[<>]/g, "").trim().slice(0, 16);
+      return cleaned || "Pelaaja";
+    }
+
+    function createEmptyGame() {
+      return {
+        active: false,
+        roundActive: false,
+        round: 1,
+        timer: ROUND_SECONDS,
+        startDelay: 0,
+        endDelay: 0,
+        winner: -1,
+        players: [],
+        bullets: [],
+        powerups: [],
+        blackHoles: [],
+        nextPowerup: 8,
+        stateVersion: 0
+      };
+    }
+
+    function createPlayer(index, config) {
+      const heroId = config.hero in HEROES ? config.hero : "bolt";
+      const hero = HEROES[heroId];
+      return {
+        id: index,
+        name: sanitizeName(config.name),
+        hero: heroId,
+        level: Math.max(1, Math.min(99, Math.floor(Number(config.level) || 1))),
+        rating: Math.max(0, Math.floor(Number(config.rating) || 500)),
+        x: index === 0 ? 120 : WORLD_W - 120,
+        y: index === 0 ? WORLD_H / 2 : WORLD_H / 2,
+        vx: 0,
+        vy: 0,
+        angle: index === 0 ? 0 : Math.PI,
+        hp: hero.maxHp,
+        maxHp: hero.maxHp,
+        radius: hero.radius,
+        rounds: 0,
+        ult: 0,
+        fireCd: 0,
+        skillCd: 0,
+        shield: 0,
+        phased: 0,
+        speedBoost: 0,
+        dashTime: 0,
+        dashX: 0,
+        dashY: 0,
+        stun: 0,
+        flash: 0,
+        input: defaultInput()
+      };
+    }
+
+    function defaultInput() {
+      return { up: false, down: false, left: false, right: false, fire: false, skill: false, ult: false, aimX: WORLD_W / 2, aimY: WORLD_H / 2 };
+    }
+
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(innerWidth * dpr));
+      canvas.height = Math.max(1, Math.floor(innerHeight * dpr));
+      canvas.style.width = innerWidth + "px";
+      canvas.style.height = innerHeight + "px";
+    }
+
+    function canvasToWorld(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const scale = Math.min(rect.width / WORLD_W, rect.height / WORLD_H);
+      const drawW = WORLD_W * scale;
+      const drawH = WORLD_H * scale;
+      const offsetX = (rect.width - drawW) / 2;
+      const offsetY = (rect.height - drawH) / 2;
+      return {
+        x: Math.max(0, Math.min(WORLD_W, (clientX - rect.left - offsetX) / scale)),
+        y: Math.max(0, Math.min(WORLD_H, (clientY - rect.top - offsetY) / scale))
+      };
+    }
+
+    function showOnly(target) {
+      [ui.menu, ui.match, ui.room, ui.join, ui.over, ui.pause].forEach(el => el.classList.add("hidden"));
+      if (target) target.classList.remove("hidden");
+    }
+
+    function showToast(text, isDanger = false) {
+      ui.toast.textContent = text;
+      ui.toast.classList.toggle("dangerText", isDanger);
+      ui.toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => ui.toast.classList.remove("show"), 2200);
+    }
+
+    function setSelectedHero(heroId) {
+      if (!(heroId in HEROES)) return;
+      selectedHero = heroId;
+      document.querySelectorAll(".heroCard").forEach(card => {
+        card.classList.toggle("selected", card.dataset.hero === heroId);
+      });
+      saveProfile();
+    }
+
+    function getLocalConfig() {
+      const info = getLevelInfo(profile.totalXp);
+      return { name: sanitizeName(ui.name.value), hero: selectedHero, level: info.level, rating: profile.rating };
+    }
+
+    function randomRoomCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    }
+
+    function socketLibraryAvailable() {
+      return typeof io === "function";
+    }
+
+    function connectSocket(onConnected) {
+      if (!socketLibraryAvailable()) {
+        showToast("Pelipalvelinta ei löytynyt. Avaa peli serverin osoitteesta, älä suoraan tiedostona.", true);
+        return false;
+      }
+
+      manualSocketClose = false;
+      socket = io({
+        transports: ["websocket", "polling"],
+        reconnection: false,
+        timeout: 8000
+      });
+
+      let connectedOnce = false;
+      socket.on("connect", () => {
+        if (connectedOnce) return;
+        connectedOnce = true;
+        onConnected();
+      });
+
+      socket.on("connect_error", err => {
+        console.warn("Socket.IO-yhteysvirhe:", err);
+        showToast("Pelipalvelimeen ei saatu yhteyttä.", true);
+        document.getElementById("joinRoomBtn").disabled = false;
+        if (screenMode === "room" || screenMode === "join") returnToMenu(false);
+      });
+
+      socket.on("queueStatus", payload => {
+        if (screenMode !== "match" || !payload) return;
+        ui.searchTime.textContent = Math.max(0, Math.floor(payload.waitedSeconds || 0)) + " s";
+        ui.searchRange.textContent = "±" + Math.max(1, Math.floor(payload.levelRange || 1));
+        ui.queuePlayers.textContent = String(Math.max(1, Math.floor(payload.waitingPlayers || 1)));
+        ui.matchStatus.textContent = payload.levelRange > 1
+          ? "Hakualuetta laajennetaan hitaasti, jotta vastustaja löytyy."
+          : "Etsitään mahdollisimman samantasoista pelaajaa…";
+      });
+
+      socket.on("matchFound", payload => {
+        if (!payload || (payload.role !== "host" && payload.role !== "guest")) return;
+        lastMatchedBySearch = true;
+        currentRoomCode = String(payload.code || "");
+        matchMode = payload.role;
+        localPlayerIndex = payload.role === "host" ? 0 : 1;
+        const opponent = payload.opponent || {};
+        ui.matchStatus.textContent = `Vastustaja löytyi: ${sanitizeName(opponent.name)} • Taso ${Math.max(1, Number(opponent.level) || 1)}!`;
+        showToast("⚔️ Sopiva vastustaja löytyi!");
+      });
+
+      socket.on("matchmakingCancelled", () => {
+        if (screenMode === "match") returnToMenu(false);
+      });
+
+      socket.on("roomReady", payload => {
+        if (!payload || !Array.isArray(payload.configs) || payload.configs.length !== 2) return;
+        currentRoomCode = String(payload.code || currentRoomCode);
+        lastMatchedBySearch = Boolean(payload.matchmade || lastMatchedBySearch);
+        if (matchMode === "host") {
+          ui.roomStatus.innerHTML = '<span class="statusDot"></span>Kaveri liittyi! Palvelin käynnistää ottelun…';
+          localPlayerIndex = 0;
+          startMatch(payload.configs, "host");
+        } else if (matchMode === "client") {
+          localPlayerIndex = 1;
+          ui.joinStatus.textContent = "Liitytty! Palvelin käynnistää ottelun…";
+          startMatch(payload.configs, "client");
+        }
+      });
+
+      socket.on("gameMessage", data => handleNetworkMessage(data));
+
+      socket.on("opponentLeft", () => {
+        showToast("Toinen pelaaja poistui palvelimelta.", true);
+        setTimeout(() => returnToMenu(false), 500);
+      });
+
+      socket.on("disconnect", reason => {
+        if (manualSocketClose) return;
+        console.warn("Pelipalvelinyhteys katkesi:", reason);
+        if (matchMode === "host" || matchMode === "client" || matchMode === "queue") {
+          showToast("Yhteys pelipalvelimeen katkesi.", true);
+          setTimeout(() => returnToMenu(false), 500);
+        }
+      });
+      return true;
+    }
+
+    function findSimilarPlayer() {
+      ensureAudio();
+      saveProfile();
+      closeNetwork();
+      screenMode = "match";
+      matchMode = "queue";
+      lastMatchedBySearch = false;
+      const config = getLocalConfig();
+      ui.ownSearchLevel.textContent = String(config.level);
+      ui.ownSearchRating.textContent = String(config.rating);
+      ui.searchTime.textContent = "0 s";
+      ui.searchRange.textContent = "±1";
+      ui.queuePlayers.textContent = "1";
+      ui.matchStatus.textContent = "Yhdistetään tasohakupalvelimeen…";
+      showOnly(ui.match);
+
+      if (!connectSocket(() => {
+        socket.emit("findMatch", { config }, result => {
+          if (!result || !result.ok) {
+            showToast((result && result.error) || "Pelaajahaku ei käynnistynyt.", true);
+            returnToMenu(true);
+            return;
+          }
+          ui.matchStatus.textContent = "Etsitään mahdollisimman samantasoista pelaajaa…";
+        });
+      })) returnToMenu(false);
+    }
+
+    function cancelMatchmaking() {
+      if (socket && socket.connected) {
+        socket.emit("cancelMatch", {}, () => returnToMenu(true));
+        setTimeout(() => {
+          if (screenMode === "match") returnToMenu(true);
+        }, 500);
+      } else {
+        returnToMenu(false);
+      }
+    }
+
+    function createOnlineRoom() {
+      ensureAudio();
+      saveProfile();
+      closeNetwork();
+      screenMode = "room";
+      matchMode = "host";
+      localPlayerIndex = 0;
+      currentRoomCode = "";
+      lastMatchedBySearch = false;
+      ui.roomCode.textContent = "------";
+      ui.roomStatus.innerHTML = '<span class="statusDot"></span>Yhdistetään pelipalvelimeen…';
+      showOnly(ui.room);
+
+      if (!connectSocket(() => {
+        socket.emit("createRoom", { config: getLocalConfig() }, result => {
+          if (!result || !result.ok) {
+            showToast((result && result.error) || "Huonetta ei voitu luoda.", true);
+            returnToMenu(true);
+            return;
+          }
+          currentRoomCode = result.code;
+          ui.roomCode.textContent = currentRoomCode;
+          ui.roomStatus.innerHTML = '<span class="statusDot"></span>Odotetaan toista pelaajaa palvelimella…';
+        });
+      })) {
+        returnToMenu(false);
+      }
+    }
+
+    function openJoinScreen() {
+      ensureAudio();
+      saveProfile();
+      screenMode = "join";
+      showOnly(ui.join);
+      ui.joinCode.value = "";
+      ui.joinStatus.textContent = "Koodi on 6 merkkiä.";
+      ui.joinStatus.classList.remove("dangerText");
+      setTimeout(() => ui.joinCode.focus(), 100);
+    }
+
+    function joinOnlineRoom() {
+      const code = ui.joinCode.value.toUpperCase().replace(/[^A-Z2-9]/g, "").slice(0, 6);
+      ui.joinCode.value = code;
+      if (code.length !== 6) {
+        ui.joinStatus.textContent = "Kirjoita tarkalleen 6 merkkiä.";
+        ui.joinStatus.classList.add("dangerText");
+        return;
+      }
+
+      closeNetwork();
+      matchMode = "client";
+      lastMatchedBySearch = false;
+      localPlayerIndex = 1;
+      currentRoomCode = code;
+      ui.joinStatus.textContent = "Yhdistetään pelipalvelimeen…";
+      ui.joinStatus.classList.remove("dangerText");
+      document.getElementById("joinRoomBtn").disabled = true;
+
+      if (!connectSocket(() => {
+        socket.emit("joinRoom", { code, config: getLocalConfig() }, result => {
+          document.getElementById("joinRoomBtn").disabled = false;
+          if (!result || !result.ok) {
+            ui.joinStatus.textContent = (result && result.error) || "Huoneeseen ei voitu liittyä.";
+            ui.joinStatus.classList.add("dangerText");
+            closeNetwork();
+            return;
+          }
+          ui.joinStatus.textContent = "Huone löytyi! Odotetaan ottelun käynnistystä…";
+        });
+      })) {
+        document.getElementById("joinRoomBtn").disabled = false;
+      }
+    }
+
+    function handleNetworkMessage(data) {
+      if (!data || typeof data.type !== "string") return;
+      if (data.type === "input" && matchMode === "host" && game.players[1]) {
+        game.players[1].input = sanitizeInput(data.input);
+        return;
+      }
+      if (data.type === "state" && matchMode === "client") {
+        applySnapshot(data.state);
+        return;
+      }
+      if (data.type === "start" && matchMode === "client" && Array.isArray(data.configs)) {
+        startMatch(data.configs, "client");
+        return;
+      }
+      if (data.type === "rematch" && matchMode === "host") {
+        showToast("Vastustaja pyysi uusintaottelua!");
+        if (screenMode === "over") {
+          const configs = game.players.map(p => ({ name: p.name, hero: p.hero }));
+          startMatch(configs, "host");
+          sendNetwork({ type: "start", configs, seed: Date.now() });
+        }
+      }
+    }
+
+    function sanitizeInput(input) {
+      const i = input || {};
+      return {
+        up: !!i.up, down: !!i.down, left: !!i.left, right: !!i.right,
+        fire: !!i.fire, skill: !!i.skill, ult: !!i.ult,
+        aimX: Number.isFinite(i.aimX) ? Math.max(0, Math.min(WORLD_W, i.aimX)) : WORLD_W / 2,
+        aimY: Number.isFinite(i.aimY) ? Math.max(0, Math.min(WORLD_H, i.aimY)) : WORLD_H / 2
+      };
+    }
+
+    function sendNetwork(data) {
+      if (socket && socket.connected) {
+        try { socket.emit("gameMessage", data); }
+        catch (err) { console.warn("Palvelinlähetys epäonnistui", err); }
+      }
+    }
+
+    function closeNetwork() {
+      if (socket) {
+        manualSocketClose = true;
+        try { socket.disconnect(); } catch {}
+      }
+      socket = null;
+      document.getElementById("joinRoomBtn").disabled = false;
+    }
+
+    function startPractice() {
+      ensureAudio();
+      saveProfile();
+      matchMode = "practice";
+      localPlayerIndex = 0;
+      lastMatchedBySearch = false;
+      const localConfig = getLocalConfig();
+      const botHeroes = Object.keys(HEROES).filter(id => id !== selectedHero);
+      const botHero = botHeroes[Math.floor(Math.random() * botHeroes.length)];
+      const botLevel = Math.max(1, Math.min(99, localConfig.level + Math.floor(Math.random() * 3) - 1));
+      startMatch([localConfig, { name: "NEUROBOT " + botLevel, hero: botHero, level: botLevel, rating: Math.max(0, profile.rating + (botLevel-localConfig.level)*40) }], "practice");
+    }
+
+    function startMatch(configs, mode) {
+      matchMode = mode;
+      screenMode = "game";
+      paused = false;
+      rematchRequested = false;
+      matchRewardGranted = false;
+      game = createEmptyGame();
+      game.active = true;
+      game.players = [createPlayer(0, configs[0]), createPlayer(1, configs[1])];
+      game.players[0].rounds = 0;
+      game.players[1].rounds = 0;
+      ui.connection.textContent = mode === "practice" ? "HARJOITUS • TASO " + game.players[1].level : lastMatchedBySearch ? "ONLINE • TASOHAKU" : mode === "host" ? "ONLINE • PALVELIN • ISÄNTÄ" : "ONLINE • PALVELIN • VIERAS";
+      ui.hud.classList.remove("hidden");
+      setMobileControlsVisible(true);
+      showOnly(null);
+      beginRound(1);
+      updateHud();
+    }
+
+    function beginRound(roundNumber) {
+      game.round = roundNumber;
+      game.roundActive = false;
+      game.timer = ROUND_SECONDS;
+      game.startDelay = 2.2;
+      game.endDelay = 0;
+      game.winner = -1;
+      game.bullets.length = 0;
+      game.powerups.length = 0;
+      game.blackHoles.length = 0;
+      game.nextPowerup = 7;
+      resetPlayerForRound(game.players[0], 0);
+      resetPlayerForRound(game.players[1], 1);
+      showBanner("ERÄ " + roundNumber);
+    }
+
+    function resetPlayerForRound(player, index) {
+      const hero = HEROES[player.hero];
+      player.x = index === 0 ? 120 : WORLD_W - 120;
+      player.y = WORLD_H / 2;
+      player.vx = 0;
+      player.vy = 0;
+      player.angle = index === 0 ? 0 : Math.PI;
+      player.hp = hero.maxHp;
+      player.maxHp = hero.maxHp;
+      player.radius = hero.radius;
+      player.ult = 0;
+      player.fireCd = 0;
+      player.skillCd = 0;
+      player.shield = 0;
+      player.phased = 0;
+      player.speedBoost = 0;
+      player.dashTime = 0;
+      player.stun = 0;
+      player.flash = 0;
+      player.input = defaultInput();
+    }
+
+    function showBanner(text) {
+      ui.banner.textContent = text;
+      ui.banner.classList.add("show");
+      setTimeout(() => ui.banner.classList.remove("show"), 1250);
+    }
+
+    function getLocalInput() {
+      let aimX = mouse.x;
+      let aimY = mouse.y;
+
+      // Puhelimella AMMU-nappi tähtää vastustajaan automaattisesti.
+      if (touchCapable && game.players.length >= 2) {
+        const local = game.players[localPlayerIndex];
+        const enemy = game.players[1 - localPlayerIndex];
+        if (local && enemy) {
+          aimX = enemy.x;
+          aimY = enemy.y;
+        }
+      }
+
+      return {
+        up: !!(keys.KeyW || keys.ArrowUp || touchInput.moveY < -0.18),
+        down: !!(keys.KeyS || keys.ArrowDown || touchInput.moveY > 0.18),
+        left: !!(keys.KeyA || keys.ArrowLeft || touchInput.moveX < -0.18),
+        right: !!(keys.KeyD || keys.ArrowRight || touchInput.moveX > 0.18),
+        fire: mouse.down || !!keys.Space || touchInput.fire,
+        skill: justPressed.has("KeyE") || touchInput.skillPulse,
+        ult: justPressed.has("KeyQ") || touchInput.ultPulse,
+        aimX,
+        aimY
+      };
+    }
+
+    function clearActionPulses() {
+      justPressed.clear();
+      touchInput.skillPulse = false;
+      touchInput.ultPulse = false;
+    }
+
+    function update(dt) {
+      if (screenMode !== "game" || paused || !game.active) return;
+
+      const localInput = getLocalInput();
+      if (matchMode === "client") {
+        if (game.players[localPlayerIndex]) game.players[localPlayerIndex].input = localInput;
+        networkTimer += dt;
+        if (networkTimer >= NETWORK_RATE) {
+          networkTimer = 0;
+          sendNetwork({ type: "input", input: localInput });
+          clearActionPulses();
+        }
+        updateClientVisuals(dt);
+        return;
+      }
+
+      if (game.players[0]) game.players[0].input = localInput;
+      if (matchMode === "practice" && game.players[1]) game.players[1].input = makeBotInput(game.players[1], game.players[0]);
+
+      simulateAuthoritative(dt);
+
+      if (matchMode === "host") {
+        networkTimer += dt;
+        if (networkTimer >= NETWORK_RATE) {
+          networkTimer = 0;
+          sendNetwork({ type: "state", state: makeSnapshot() });
+        }
+      }
+      clearActionPulses();
+    }
+
+    function updateClientVisuals(dt) {
+      for (const p of game.players) {
+        if (!p) continue;
+        p.flash = Math.max(0, p.flash - dt);
+      }
+      updateParticles(dt);
+      updateHud();
+    }
+
+    function makeBotInput(bot, enemy) {
+      if (!bot || !enemy) return defaultInput();
+      const dx = enemy.x - bot.x;
+      const dy = enemy.y - bot.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const input = defaultInput();
+      const botLevel = Math.max(1, Number(bot.level) || 1);
+      const skillFactor = Math.max(0.18, Math.min(1, 0.25 + botLevel / 28));
+      const aimError = Math.max(4, 105 - botLevel * 4);
+      const wobble = performance.now() / 420 + bot.id * 2;
+      input.aimX = enemy.x + Math.cos(wobble) * aimError;
+      input.aimY = enemy.y + Math.sin(wobble * 1.17) * aimError;
+      input.fire = dist < 700 && Math.random() < (0.45 + skillFactor * 0.5);
+
+      const desired = bot.hero === "tank" ? 300 : bot.hero === "magnet" ? 350 : 420;
+      const strafe = Math.sin(performance.now() / 730 + bot.id * 2.1);
+      let mx = 0;
+      let my = 0;
+      if (dist > desired + 55) { mx += dx / dist; my += dy / dist; }
+      if (dist < desired - 70) { mx -= dx / dist; my -= dy / dist; }
+      mx += (-dy / dist) * strafe * 0.78;
+      my += (dx / dist) * strafe * 0.78;
+      input.left = mx < -0.2;
+      input.right = mx > 0.2;
+      input.up = my < -0.2;
+      input.down = my > 0.2;
+      input.skill = bot.skillCd <= 0 && (dist < 250 + skillFactor * 80 || Math.random() < 0.002 + skillFactor * 0.008);
+      input.ult = bot.ult >= 100 && dist < 270 + skillFactor * 100;
+      return input;
+    }
+
+    function simulateAuthoritative(dt) {
+      if (game.startDelay > 0) {
+        game.startDelay -= dt;
+        if (game.startDelay <= 0) {
+          game.roundActive = true;
+          showBanner("TAISTELE!");
+          tone(440, 0.08, 0.05);
+        }
+      }
+
+      if (game.roundActive) {
+        game.timer = Math.max(0, game.timer - dt);
+        game.nextPowerup -= dt;
+        if (game.nextPowerup <= 0) {
+          spawnPowerup();
+          game.nextPowerup = 8 + Math.random() * 4;
+        }
+
+        for (const player of game.players) updatePlayer(player, dt);
+        resolvePlayers();
+        updateBullets(dt);
+        updatePowerups(dt);
+        updateBlackHoles(dt);
+
+        if (game.timer <= 0) {
+          const winner = game.players[0].hp === game.players[1].hp ? (Math.random() < 0.5 ? 0 : 1) : (game.players[0].hp > game.players[1].hp ? 0 : 1);
+          endRound(winner, "Aika loppui!");
+        }
+      } else if (game.endDelay > 0) {
+        game.endDelay -= dt;
+        if (game.endDelay <= 0) continueAfterRound();
+      }
+
+      updateParticles(dt);
+      updateHud();
+      game.stateVersion++;
+    }
+
+    function updatePlayer(player, dt) {
+      const hero = HEROES[player.hero];
+      const input = player.input || defaultInput();
+      player.fireCd = Math.max(0, player.fireCd - dt);
+      player.skillCd = Math.max(0, player.skillCd - dt);
+      player.shield = Math.max(0, player.shield - dt);
+      player.phased = Math.max(0, player.phased - dt);
+      player.speedBoost = Math.max(0, (player.speedBoost || 0) - dt);
+      player.stun = Math.max(0, player.stun - dt);
+      player.flash = Math.max(0, player.flash - dt);
+
+      const aimDx = input.aimX - player.x;
+      const aimDy = input.aimY - player.y;
+      if (Math.hypot(aimDx, aimDy) > 4) player.angle = Math.atan2(aimDy, aimDx);
+
+      if (player.dashTime > 0) {
+        player.dashTime -= dt;
+        moveWithCollision(player, player.dashX * dt, player.dashY * dt);
+      } else if (player.stun <= 0) {
+        let mx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+        let my = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+        const len = Math.hypot(mx, my) || 1;
+        if (mx || my) { mx /= len; my /= len; }
+        let speed = hero.speed;
+        if (player.phased > 0) speed *= 1.45;
+        if (player.speedBoost > 0) speed *= 1.32;
+        moveWithCollision(player, mx * speed * dt, my * speed * dt);
+      }
+
+      if (input.fire && player.fireCd <= 0 && game.roundActive) {
+        shoot(player);
+        player.fireCd = hero.fireRate;
+      }
+      if (input.skill) useSkill(player);
+      if (input.ult && player.ult >= 100) useUltimate(player);
+
+      if (player.hero === "tank" && player.shield > 0) {
+        addParticle(player.x + Math.cos(performance.now()/120)*player.radius, player.y + Math.sin(performance.now()/120)*player.radius, HEROES.tank.color, 0.15, 3);
+      }
+    }
+
+    function moveWithCollision(player, dx, dy) {
+      player.x += dx;
+      player.x = Math.max(player.radius, Math.min(WORLD_W - player.radius, player.x));
+      for (const o of OBSTACLES) {
+        if (circleRectOverlap(player.x, player.y, player.radius, o)) {
+          if (dx > 0) player.x = o.x - player.radius;
+          else if (dx < 0) player.x = o.x + o.w + player.radius;
+        }
+      }
+
+      player.y += dy;
+      player.y = Math.max(player.radius, Math.min(WORLD_H - player.radius, player.y));
+      for (const o of OBSTACLES) {
+        if (circleRectOverlap(player.x, player.y, player.radius, o)) {
+          if (dy > 0) player.y = o.y - player.radius;
+          else if (dy < 0) player.y = o.y + o.h + player.radius;
+        }
+      }
+    }
+
+    function circleRectOverlap(cx, cy, radius, rect) {
+      const nx = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
+      const ny = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
+      const dx = cx - nx;
+      const dy = cy - ny;
+      return dx * dx + dy * dy < radius * radius;
+    }
+
+    function resolvePlayers() {
+      const a = game.players[0];
+      const b = game.players[1];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const minDist = a.radius + b.radius;
+      if (dist < minDist) {
+        const push = (minDist - dist) / 2;
+        const nx = dx / dist;
+        const ny = dy / dist;
+        moveWithCollision(a, -nx * push, -ny * push);
+        moveWithCollision(b, nx * push, ny * push);
+      }
+    }
+
+    function shoot(player) {
+      const hero = HEROES[player.hero];
+      const spread = player.hero === "tank" ? (Math.random() - 0.5) * 0.07 : 0;
+      const angle = player.angle + spread;
+      const speed = hero.bulletSpeed;
+      game.bullets.push({
+        owner: player.id,
+        x: player.x + Math.cos(angle) * (player.radius + 9),
+        y: player.y + Math.sin(angle) * (player.radius + 9),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: player.hero === "tank" ? 8 : 6,
+        damage: hero.damage,
+        life: 1.6,
+        color: hero.color
+      });
+      tone(player.hero === "tank" ? 125 : 220 + player.id * 40, 0.035, 0.018, "square");
+      for (let i = 0; i < 3; i++) addParticle(player.x + Math.cos(angle)*player.radius, player.y + Math.sin(angle)*player.radius, hero.color, 0.18, 3);
+    }
+
+    function useSkill(player) {
+      if (!game.roundActive || player.skillCd > 0 || player.stun > 0) return;
+      const hero = HEROES[player.hero];
+      player.skillCd = hero.skillCooldown;
+
+      if (player.hero === "bolt") {
+        player.dashTime = 0.16;
+        player.dashX = Math.cos(player.angle) * 1080;
+        player.dashY = Math.sin(player.angle) * 1080;
+        spawnBurst(player.x, player.y, hero.color, 16);
+        tone(620, 0.10, 0.04, "sawtooth");
+      } else if (player.hero === "tank") {
+        player.shield = 2.6;
+        spawnBurst(player.x, player.y, hero.color, 18);
+        tone(180, 0.14, 0.04, "triangle");
+      } else if (player.hero === "ghost") {
+        player.phased = 1.55;
+        spawnBurst(player.x, player.y, hero.color, 20);
+        tone(510, 0.14, 0.035, "sine");
+      } else if (player.hero === "magnet") {
+        const enemy = game.players[1 - player.id];
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < 520) {
+          const pull = Math.min(190, Math.max(70, dist - player.radius - enemy.radius - 25));
+          moveWithCollision(enemy, dx / dist * pull, dy / dist * pull);
+          enemy.stun = Math.max(enemy.stun, 0.35);
+          damagePlayer(enemy, 10, player.id);
+          beamParticles(enemy.x, enemy.y, player.x, player.y, hero.color, 18);
+        }
+        tone(240, 0.18, 0.045, "sawtooth");
+      }
+    }
+
+    function useUltimate(player) {
+      if (!game.roundActive || player.ult < 100) return;
+      player.ult = 0;
+      const enemy = game.players[1 - player.id];
+      const hero = HEROES[player.hero];
+      shake = Math.max(shake, 12);
+
+      if (player.hero === "bolt") {
+        if (distance(player, enemy) < 520) {
+          damagePlayer(enemy, 42, player.id);
+          enemy.stun = 0.75;
+          beamParticles(player.x, player.y, enemy.x, enemy.y, hero.color, 34);
+        }
+        spawnBurst(player.x, player.y, hero.color, 38);
+      } else if (player.hero === "tank") {
+        if (distance(player, enemy) < 240) {
+          damagePlayer(enemy, 50, player.id);
+          enemy.stun = 1.1;
+          const angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+          moveWithCollision(enemy, Math.cos(angle) * 120, Math.sin(angle) * 120);
+        }
+        spawnRing(player.x, player.y, hero.color, 46);
+      } else if (player.hero === "ghost") {
+        const oldX = player.x;
+        const oldY = player.y;
+        player.x = Math.max(player.radius, Math.min(WORLD_W-player.radius, player.input.aimX));
+        player.y = Math.max(player.radius, Math.min(WORLD_H-player.radius, player.input.aimY));
+        for (const o of OBSTACLES) {
+          if (circleRectOverlap(player.x, player.y, player.radius, o)) {
+            player.x = oldX;
+            player.y = oldY;
+            break;
+          }
+        }
+        spawnBurst(oldX, oldY, hero.color, 28);
+        spawnBurst(player.x, player.y, hero.color, 32);
+        if (distance(player, enemy) < 190) damagePlayer(enemy, 46, player.id);
+        player.phased = 1.1;
+      } else if (player.hero === "magnet") {
+        game.blackHoles.push({ owner: player.id, x: player.input.aimX, y: player.input.aimY, radius: 210, life: 2.7, tick: 0 });
+        spawnBurst(player.input.aimX, player.input.aimY, hero.color, 42);
+      }
+      tone(80, 0.35, 0.06, "sawtooth");
+    }
+
+    function updateBullets(dt) {
+      for (let i = game.bullets.length - 1; i >= 0; i--) {
+        const b = game.bullets[i];
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+        let remove = b.life <= 0 || b.x < -20 || b.x > WORLD_W + 20 || b.y < -20 || b.y > WORLD_H + 20;
+
+        if (!remove) {
+          for (const o of OBSTACLES) {
+            if (b.x > o.x && b.x < o.x + o.w && b.y > o.y && b.y < o.y + o.h) {
+              remove = true;
+              spawnBurst(b.x, b.y, b.color, 5);
+              break;
+            }
+          }
+        }
+
+        if (!remove) {
+          const target = game.players[1 - b.owner];
+          if (target && distanceXY(b.x, b.y, target.x, target.y) < b.radius + target.radius) {
+            if (target.phased > 0) {
+              remove = true;
+              addParticle(b.x, b.y, HEROES[target.hero].color, 0.3, 6);
+            } else {
+              damagePlayer(target, b.damage, b.owner);
+              remove = true;
+              spawnBurst(b.x, b.y, b.color, 10);
+            }
+          }
+        }
+
+        if (remove) game.bullets.splice(i, 1);
+      }
+    }
+
+    function damagePlayer(target, amount, attackerId) {
+      if (!game.roundActive || target.hp <= 0) return;
+      if (target.shield > 0) amount *= 0.28;
+      amount = Math.max(1, amount);
+      target.hp = Math.max(0, target.hp - amount);
+      target.flash = 0.12;
+      const attacker = game.players[attackerId];
+      if (attacker) attacker.ult = Math.min(100, attacker.ult + amount * 0.72);
+      shake = Math.max(shake, 4 + amount * 0.07);
+      tone(95, 0.04, 0.025, "square");
+      if (target.hp <= 0) endRound(attackerId, "Tyrmäys!");
+    }
+
+    function spawnPowerup() {
+      const spots = [
+        { x: 640, y: 110 }, { x: 640, y: 610 }, { x: 150, y: 110 }, { x: 1130, y: 610 },
+        { x: 160, y: 610 }, { x: 1120, y: 110 }, { x: 640, y: 360 }
+      ];
+      const shuffled = spots.sort(() => Math.random() - 0.5);
+      const spot = shuffled.find(s => !OBSTACLES.some(o => circleRectOverlap(s.x, s.y, 22, o))) || spots[0];
+      const roll = Math.random();
+      const type = roll < .40 ? "heal" : roll < .68 ? "ult" : roll < .86 ? "speed" : "shield";
+      game.powerups.push({ x: spot.x, y: spot.y, type, life: 12, spin: 0 });
+    }
+
+    function updatePowerups(dt) {
+      for (let i = game.powerups.length - 1; i >= 0; i--) {
+        const p = game.powerups[i];
+        p.life -= dt;
+        p.spin += dt * 2.5;
+        let picked = false;
+        for (const player of game.players) {
+          if (distanceXY(p.x, p.y, player.x, player.y) < 25 + player.radius) {
+            if (p.type === "heal") player.hp = Math.min(player.maxHp, player.hp + 28);
+            else if (p.type === "ult") player.ult = Math.min(100, player.ult + 38);
+            else if (p.type === "speed") player.speedBoost = Math.max(player.speedBoost || 0, 5.5);
+            else if (p.type === "shield") player.shield = Math.max(player.shield, 3.2);
+            const colors = { heal:"#79ffb3", ult:"#ffe66d", speed:"#4de7ff", shield:"#c590ff" };
+            spawnBurst(p.x, p.y, colors[p.type] || "#ffffff", 18);
+            tone(p.type === "heal" ? 520 : p.type === "speed" ? 640 : 760, 0.12, 0.035, "sine");
+            picked = true;
+            break;
+          }
+        }
+        if (picked || p.life <= 0) game.powerups.splice(i, 1);
+      }
+    }
+
+    function updateBlackHoles(dt) {
+      for (let i = game.blackHoles.length - 1; i >= 0; i--) {
+        const hole = game.blackHoles[i];
+        hole.life -= dt;
+        hole.tick -= dt;
+        const enemy = game.players[1 - hole.owner];
+        const dx = hole.x - enemy.x;
+        const dy = hole.y - enemy.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < hole.radius) {
+          const strength = (1 - dist / hole.radius) * 235;
+          moveWithCollision(enemy, dx / dist * strength * dt, dy / dist * strength * dt);
+          if (hole.tick <= 0) {
+            hole.tick = 0.35;
+            damagePlayer(enemy, 8, hole.owner);
+          }
+        }
+        if (hole.life <= 0) game.blackHoles.splice(i, 1);
+      }
+    }
+
+    function endRound(winnerIndex, reason) {
+      if (!game.roundActive) return;
+      game.roundActive = false;
+      game.winner = winnerIndex;
+      game.players[winnerIndex].rounds++;
+      game.endDelay = 2.4;
+      showBanner(reason + " " + game.players[winnerIndex].name + " voitti erän!");
+      spawnBurst(game.players[winnerIndex].x, game.players[winnerIndex].y, HEROES[game.players[winnerIndex].hero].color, 38);
+      tone(660, 0.15, 0.045, "triangle");
+    }
+
+    function continueAfterRound() {
+      const winner = game.players.findIndex(p => p.rounds >= WIN_ROUNDS);
+      if (winner >= 0) finishMatch(winner);
+      else beginRound(game.round + 1);
+    }
+
+    function finishMatch(winnerIndex) {
+      game.active = false;
+      if (matchMode === "host") {
+        sendNetwork({ type: "state", state: makeSnapshot() });
+      }
+      screenMode = "over";
+      const localWon = winnerIndex === localPlayerIndex;
+      ui.overTitle.textContent = localWon ? "🏆 VOITTO!" : "💥 Tappio tällä kertaa";
+      ui.overText.textContent = game.players[winnerIndex].name + " voitti ottelun " + game.players[winnerIndex].rounds + "–" + game.players[1-winnerIndex].rounds + ".";
+      ui.rematch.textContent = matchMode === "practice" ? "Uusi ottelu" : "Pyydä uusintaottelu";
+      if (!matchRewardGranted) {
+        matchRewardGranted = true;
+        const beforeLevel = getLevelInfo(profile.totalXp).level;
+        const online = matchMode !== "practice";
+        const xpGain = localWon ? (online ? 70 : 28) : (online ? 35 : 14);
+        const coinGain = localWon ? (online ? 42 : 24) : (online ? 14 : 8);
+        const ratingChange = online ? (localWon ? 24 : -18) : 0;
+        profile.matches++;
+        profile.totalXp += xpGain;
+        profile.coins += coinGain;
+        profile.rating = Math.max(0, Math.min(9999, profile.rating + ratingChange));
+        if (localWon) {
+          profile.wins++;
+          profile.streak++;
+          profile.bestStreak = Math.max(profile.bestStreak, profile.streak);
+        } else {
+          profile.losses++;
+          profile.streak = 0;
+        }
+        const opponent = game.players[1-localPlayerIndex];
+        const score = `${game.players[winnerIndex].rounds}–${game.players[1-winnerIndex].rounds}`;
+        profile.history.unshift({ result: localWon ? "W" : "L", opponent: opponent ? opponent.name : "Vastustaja", score });
+        profile.history = profile.history.slice(0, 5);
+        const afterLevel = getLevelInfo(profile.totalXp).level;
+        let levelBonus = 0;
+        if (afterLevel > beforeLevel) {
+          levelBonus = (afterLevel-beforeLevel) * 25;
+          profile.coins += levelBonus;
+        }
+        ui.overText.innerHTML = `${game.players[winnerIndex].name} voitti ottelun ${score}.<div class="rewardLine">+${xpGain} XP • +${coinGain + levelBonus} kolikkoa${ratingChange ? ` • ${ratingChange > 0 ? "+" : ""}${ratingChange} rating` : ""}${afterLevel > beforeLevel ? ` • 🎉 TASO ${afterLevel}!` : ""}</div>`;
+        saveProfile();
+      }
+      ui.hud.classList.add("hidden");
+      setMobileControlsVisible(false);
+      showOnly(ui.over);
+      tone(localWon ? 880 : 120, 0.35, 0.055, localWon ? "triangle" : "sawtooth");
+    }
+
+    function requestRematch() {
+      if (matchMode === "practice") {
+        const configs = [getLocalConfig(), { name: game.players[1].name, hero: game.players[1].hero, level: game.players[1].level, rating: game.players[1].rating }];
+        startMatch(configs, "practice");
+      } else if (matchMode === "host") {
+        const configs = game.players.map((p, i) => i === localPlayerIndex ? getLocalConfig() : ({ name: p.name, hero: p.hero, level: p.level, rating: p.rating }));
+        startMatch(configs, "host");
+        sendNetwork({ type: "start", configs, seed: Date.now() });
+      } else if (matchMode === "client") {
+        sendNetwork({ type: "rematch" });
+        ui.rematch.disabled = true;
+        ui.rematch.textContent = "Pyyntö lähetetty…";
+        showToast("Uusintaottelupyyntö lähetettiin.");
+      }
+    }
+
+    function makeSnapshot() {
+      return {
+        active: game.active,
+        roundActive: game.roundActive,
+        round: game.round,
+        timer: game.timer,
+        startDelay: game.startDelay,
+        endDelay: game.endDelay,
+        winner: game.winner,
+        stateVersion: game.stateVersion,
+        players: game.players.map(p => ({
+          id: p.id, name: p.name, hero: p.hero, level: p.level, rating: p.rating, x: p.x, y: p.y, angle: p.angle,
+          hp: p.hp, maxHp: p.maxHp, radius: p.radius, rounds: p.rounds, ult: p.ult,
+          fireCd: p.fireCd, skillCd: p.skillCd, shield: p.shield, phased: p.phased, speedBoost: p.speedBoost,
+          stun: p.stun, flash: p.flash
+        })),
+        bullets: game.bullets.map(b => ({ owner: b.owner, x: b.x, y: b.y, vx: b.vx, vy: b.vy, radius: b.radius, damage: b.damage, life: b.life, color: b.color })),
+        powerups: game.powerups.map(p => ({ x: p.x, y: p.y, type: p.type, life: p.life, spin: p.spin })),
+        blackHoles: game.blackHoles.map(h => ({ owner: h.owner, x: h.x, y: h.y, radius: h.radius, life: h.life }))
+      };
+    }
+
+    function applySnapshot(state) {
+      if (!state || !Array.isArray(state.players) || state.players.length < 2) return;
+      const previousRound = game.round;
+      const wasActive = game.active;
+      game.active = !!state.active;
+      game.roundActive = !!state.roundActive;
+      game.round = state.round || 1;
+      game.timer = Number.isFinite(state.timer) ? state.timer : ROUND_SECONDS;
+      game.startDelay = Number.isFinite(state.startDelay) ? state.startDelay : 0;
+      game.endDelay = Number.isFinite(state.endDelay) ? state.endDelay : 0;
+      game.winner = Number.isFinite(state.winner) ? state.winner : -1;
+      game.stateVersion = state.stateVersion || 0;
+      game.players = state.players.map((p, index) => {
+        const old = game.players[index] || createPlayer(index, p);
+        Object.assign(old, p);
+        old.input = old.input || defaultInput();
+        return old;
+      });
+      game.bullets = Array.isArray(state.bullets) ? state.bullets : [];
+      game.powerups = Array.isArray(state.powerups) ? state.powerups : [];
+      game.blackHoles = Array.isArray(state.blackHoles) ? state.blackHoles : [];
+
+      if (previousRound !== game.round) showBanner("ERÄ " + game.round);
+      if (wasActive && !game.active && screenMode === "game") {
+        const winner = game.players[0].rounds > game.players[1].rounds ? 0 : 1;
+        finishMatch(winner);
+      }
+      updateHud();
+    }
+
+    function updateHud() {
+      if (!game.players.length) return;
+      for (let i = 0; i < 2; i++) {
+        const p = game.players[i];
+        ui.pNames[i].textContent = `${p.name} • Lv.${p.level || 1} ${HEROES[p.hero].icon}`;
+        ui.pRounds[i].textContent = "●".repeat(p.rounds) + "○".repeat(Math.max(0, WIN_ROUNDS - p.rounds));
+        ui.pHp[i].style.width = Math.max(0, Math.min(100, p.hp / p.maxHp * 100)) + "%";
+        ui.pUlt[i].style.width = Math.max(0, Math.min(100, p.ult)) + "%";
+      }
+      ui.timer.textContent = String(Math.ceil(game.timer));
+      const local = game.players[localPlayerIndex] || game.players[0];
+      const hero = HEROES[local.hero];
+      ui.skillName.textContent = hero.skillName;
+      ui.ultName.textContent = hero.ultName;
+      ui.skillCd.textContent = local.skillCd <= 0 ? "VALMIS" : local.skillCd.toFixed(1) + "s";
+      ui.skillAbility.classList.toggle("ready", local.skillCd <= 0);
+      ui.ultCd.textContent = local.ult >= 100 ? "VALMIS" : Math.floor(local.ult) + "%";
+      ui.ultAbility.classList.toggle("ready", local.ult >= 100);
+
+      ui.skillTouchText.textContent = local.skillCd <= 0 ? "KYKY" : Math.ceil(local.skillCd) + "s";
+      ui.skillTouchBtn.classList.toggle("notReady", local.skillCd > 0);
+      ui.ultTouchText.textContent = local.ult >= 100 ? "VALMIS" : Math.floor(local.ult) + "%";
+      ui.ultTouchBtn.classList.toggle("notReady", local.ult < 100);
+      const hpRatio = local.maxHp > 0 ? local.hp / local.maxHp : 1;
+      ui.dangerVignette.style.opacity = hpRatio < .32 ? String(Math.min(.85, (.32-hpRatio)*3.2)) : "0";
+    }
+
+    function addParticle(x, y, color, life = 0.35, size = 4) {
+      const a = Math.random() * TAU;
+      const speed = 30 + Math.random() * 160;
+      particles.push({ x, y, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, color, life, maxLife: life, size: size + Math.random()*3 });
+      if (particles.length > 550) particles.splice(0, particles.length - 550);
+    }
+
+    function spawnBurst(x, y, color, count) {
+      for (let i = 0; i < count; i++) addParticle(x, y, color, 0.25 + Math.random()*0.45, 3 + Math.random()*4);
+    }
+
+    function spawnRing(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        const a = i / count * TAU;
+        particles.push({ x, y, vx: Math.cos(a)*260, vy: Math.sin(a)*260, color, life: 0.7, maxLife: 0.7, size: 5 });
+      }
+    }
+
+    function beamParticles(x1, y1, x2, y2, color, count) {
+      for (let i = 0; i < count; i++) {
+        const t = i / Math.max(1, count - 1);
+        addParticle(x1 + (x2-x1)*t, y1 + (y2-y1)*t, color, 0.22 + Math.random()*0.28, 3);
+      }
+    }
+
+    function updateParticles(dt) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= Math.pow(0.04, dt);
+        p.vy *= Math.pow(0.04, dt);
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      shake = Math.max(0, shake - dt * 30);
+    }
+
+    function distance(a, b) { return Math.hypot(a.x-b.x, a.y-b.y); }
+    function distanceXY(x1, y1, x2, y2) { return Math.hypot(x1-x2, y1-y2); }
+
+    function draw() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const scale = Math.min(w / WORLD_W, h / WORLD_H);
+      const offsetX = (w - WORLD_W * scale) / 2;
+      const offsetY = (h - WORLD_H * scale) / 2;
+      const sx = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+      const sy = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+      ctx.save();
+      ctx.translate(offsetX + sx, offsetY + sy);
+      ctx.scale(scale, scale);
+      drawArena();
+      if (screenMode === "game" || screenMode === "over") drawGameObjects();
+      else drawMenuDecor();
+      ctx.restore();
+    }
+
+    function drawArena() {
+      const grad = ctx.createLinearGradient(0, 0, WORLD_W, WORLD_H);
+      grad.addColorStop(0, "#071a2c");
+      grad.addColorStop(0.5, "#0a1730");
+      grad.addColorStop(1, "#170d2d");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+      ctx.strokeStyle = "rgba(106, 191, 255, 0.08)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= WORLD_W; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_H); ctx.stroke();
+      }
+      for (let y = 0; y <= WORLD_H; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD_W, y); ctx.stroke();
+      }
+
+      const glow = ctx.createRadialGradient(WORLD_W/2, WORLD_H/2, 20, WORLD_W/2, WORLD_H/2, 520);
+      glow.addColorStop(0, "rgba(77,231,255,0.09)");
+      glow.addColorStop(1, "rgba(77,231,255,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+
+      ctx.strokeStyle = "rgba(77,231,255,0.3)";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(4, 4, WORLD_W-8, WORLD_H-8);
+
+      for (const o of OBSTACLES) drawObstacle(o);
+    }
+
+    function drawObstacle(o) {
+      const g = ctx.createLinearGradient(o.x, o.y, o.x, o.y+o.h);
+      g.addColorStop(0, "#223d5c");
+      g.addColorStop(1, "#101d35");
+      ctx.fillStyle = g;
+      roundRect(ctx, o.x, o.y, o.w, o.h, 15);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(119,207,255,0.25)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,0.035)";
+      roundRect(ctx, o.x+10, o.y+9, o.w-20, 8, 5);
+      ctx.fill();
+    }
+
+    function drawMenuDecor() {
+      const time = performance.now() / 1000;
+      for (let i = 0; i < 18; i++) {
+        const a = time * (0.11 + i*0.002) + i * 2.4;
+        const r = 150 + (i % 6) * 75;
+        const x = WORLD_W/2 + Math.cos(a) * r;
+        const y = WORLD_H/2 + Math.sin(a*1.13) * r*0.45;
+        ctx.globalAlpha = 0.18 + (i%4)*0.05;
+        ctx.fillStyle = i % 2 ? "#4de7ff" : "#ff5fd1";
+        ctx.beginPath(); ctx.arc(x, y, 3+(i%3)*2, 0, TAU); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawGameObjects() {
+      for (const hole of game.blackHoles) drawBlackHole(hole);
+      for (const powerup of game.powerups) drawPowerup(powerup);
+      for (const bullet of game.bullets) drawBullet(bullet);
+      for (const player of game.players) if (player) drawPlayer(player);
+      for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawPlayer(player) {
+      const hero = HEROES[player.hero];
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle);
+      ctx.globalAlpha = player.phased > 0 ? 0.5 + Math.sin(performance.now()/55)*0.18 : 1;
+
+      ctx.shadowColor = hero.color;
+      ctx.shadowBlur = player.ult >= 100 ? 28 : 15;
+      ctx.fillStyle = player.flash > 0 ? "#ffffff" : hero.color;
+      ctx.beginPath(); ctx.arc(0, 0, player.radius, 0, TAU); ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = "rgba(3,10,20,0.78)";
+      ctx.beginPath(); ctx.arc(-3, 0, player.radius*0.62, 0, TAU); ctx.fill();
+
+      ctx.fillStyle = hero.color;
+      roundRect(ctx, player.radius*0.32, -6, player.radius*0.95, 12, 6);
+      ctx.fill();
+
+      ctx.rotate(-player.angle);
+      ctx.font = `${Math.round(player.radius*1.25)}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(hero.icon, -3, 1);
+
+      if (player.shield > 0) {
+        ctx.strokeStyle = "rgba(121,255,179,0.82)";
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(0,0,player.radius+10+Math.sin(performance.now()/90)*2,0,TAU); ctx.stroke();
+      }
+      if (player.ult >= 100) {
+        ctx.strokeStyle = "rgba(255,230,109,0.82)";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([7,7]);
+        ctx.lineDashOffset = -performance.now()/40;
+        ctx.beginPath(); ctx.arc(0,0,player.radius+16,0,TAU); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawBullet(b) {
+      ctx.save();
+      ctx.shadowColor = b.color;
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = b.color;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPowerup(p) {
+      const colors = { heal:"#79ffb3", ult:"#ffe66d", speed:"#4de7ff", shield:"#c590ff" };
+      const symbols = { heal:"+", ult:"Q", speed:"»", shield:"◆" };
+      const color = colors[p.type] || "#ffffff";
+      const symbol = symbols[p.type] || "?";
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.spin || 0);
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 22;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = i / 8 * TAU;
+        const r = i % 2 ? 15 : 23;
+        const x = Math.cos(a)*r;
+        const y = Math.sin(a)*r;
+        if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.rotate(-(p.spin || 0));
+      ctx.fillStyle = "#07111f";
+      ctx.font = "1000 19px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(symbol, 0, 1);
+      ctx.restore();
+    }
+
+    function drawBlackHole(hole) {
+      const pulse = 1 + Math.sin(performance.now()/90)*0.05;
+      const g = ctx.createRadialGradient(hole.x,hole.y,8,hole.x,hole.y,hole.radius*pulse);
+      g.addColorStop(0,"rgba(3,0,8,0.98)");
+      g.addColorStop(0.18,"rgba(255,95,209,0.75)");
+      g.addColorStop(0.55,"rgba(106,63,255,0.2)");
+      g.addColorStop(1,"rgba(106,63,255,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(hole.x,hole.y,hole.radius*pulse,0,TAU); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(hole.x,hole.y,24+Math.sin(performance.now()/70)*5,0,TAU); ctx.stroke();
+    }
+
+    function roundRect(context, x, y, w, h, r) {
+      const rr = Math.min(r, w/2, h/2);
+      context.beginPath();
+      context.moveTo(x+rr, y);
+      context.arcTo(x+w, y, x+w, y+h, rr);
+      context.arcTo(x+w, y+h, x, y+h, rr);
+      context.arcTo(x, y+h, x, y, rr);
+      context.arcTo(x, y, x+w, y, rr);
+      context.closePath();
+    }
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch { audioCtx = null; }
+      }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+    }
+
+    function tone(freq, duration, volume, type = "sine") {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch {}
+    }
+
+    function returnToMenu(close = true) {
+      if (close) closeNetwork();
+      screenMode = "menu";
+      matchMode = "none";
+      lastMatchedBySearch = false;
+      paused = false;
+      game = createEmptyGame();
+      particles = [];
+      ui.hud.classList.add("hidden");
+      setMobileControlsVisible(false);
+      ui.rematch.disabled = false;
+      ui.dangerVignette.style.opacity = "0";
+      showOnly(ui.menu);
+      saveProfile();
+    }
+
+    function copyRoomCode() {
+      const text = currentRoomCode;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showToast("Huonekoodi kopioitu!")).catch(() => fallbackCopy(text));
+      } else fallbackCopy(text);
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); showToast("Huonekoodi kopioitu!"); }
+      catch { showToast("Koodi on " + text); }
+      ta.remove();
+    }
+
+    function setMobileControlsVisible(visible) {
+      if (!touchCapable) {
+        ui.mobileControls.classList.add("hidden");
+        return;
+      }
+      ui.mobileControls.classList.toggle("hidden", !visible);
+      if (!visible) resetTouchControls();
+    }
+
+    function resetTouchControls() {
+      touchInput.moveX = 0;
+      touchInput.moveY = 0;
+      touchInput.fire = false;
+      touchInput.skillPulse = false;
+      touchInput.ultPulse = false;
+      touchInput.movePointerId = null;
+      touchInput.firePointerId = null;
+      ui.movePad.classList.remove("active");
+      ui.fireTouchBtn.classList.remove("pressed");
+      ui.moveStick.style.transform = "translate(-50%, -50%)";
+    }
+
+    function updateMoveJoystick(clientX, clientY) {
+      const rect = ui.movePad.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const maxDistance = rect.width * 0.31;
+      const distance = Math.hypot(dx, dy);
+      const scale = distance > maxDistance ? maxDistance / distance : 1;
+      const clampedX = dx * scale;
+      const clampedY = dy * scale;
+      touchInput.moveX = Math.max(-1, Math.min(1, clampedX / maxDistance));
+      touchInput.moveY = Math.max(-1, Math.min(1, clampedY / maxDistance));
+      ui.moveStick.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+    }
+
+    function releaseMoveJoystick(pointerId) {
+      if (touchInput.movePointerId !== pointerId && pointerId !== undefined) return;
+      touchInput.movePointerId = null;
+      touchInput.moveX = 0;
+      touchInput.moveY = 0;
+      ui.movePad.classList.remove("active");
+      ui.moveStick.style.transform = "translate(-50%, -50%)";
+    }
+
+    function togglePause() {
+      if (screenMode !== "game" || matchMode !== "practice") return;
+      paused = !paused;
+      if (paused) {
+        screenMode = "pause";
+        setMobileControlsVisible(false);
+        showOnly(ui.pause);
+      } else {
+        screenMode = "game";
+        setMobileControlsVisible(true);
+        showOnly(null);
+      }
+    }
+
+    document.querySelectorAll(".heroCard").forEach(card => card.addEventListener("click", () => setSelectedHero(card.dataset.hero)));
+    setSelectedHero(selectedHero);
+
+    document.getElementById("findMatchBtn").addEventListener("click", findSimilarPlayer);
+    document.getElementById("cancelMatchBtn").addEventListener("click", cancelMatchmaking);
+    document.getElementById("dailyRewardBtn").addEventListener("click", claimDailyReward);
+    document.getElementById("createRoomBtn").addEventListener("click", createOnlineRoom);
+    document.getElementById("openJoinBtn").addEventListener("click", openJoinScreen);
+    document.getElementById("practiceBtn").addEventListener("click", startPractice);
+    document.getElementById("copyCodeBtn").addEventListener("click", copyRoomCode);
+    document.getElementById("cancelRoomBtn").addEventListener("click", () => returnToMenu(true));
+    document.getElementById("cancelJoinBtn").addEventListener("click", () => returnToMenu(true));
+    document.getElementById("joinRoomBtn").addEventListener("click", joinOnlineRoom);
+    document.getElementById("backMenuBtn").addEventListener("click", () => returnToMenu(true));
+    document.getElementById("rematchBtn").addEventListener("click", requestRematch);
+    document.getElementById("resumeBtn").addEventListener("click", togglePause);
+    document.getElementById("pauseMenuBtn").addEventListener("click", () => returnToMenu(true));
+
+    ui.name.addEventListener("change", saveProfile);
+    ui.joinCode.addEventListener("input", () => {
+      ui.joinCode.value = ui.joinCode.value.toUpperCase().replace(/[^A-Z2-9]/g, "").slice(0,6);
+      ui.joinStatus.textContent = ui.joinCode.value.length === 6 ? "Koodi näyttää hyvältä." : "Koodi on 6 merkkiä.";
+      ui.joinStatus.classList.remove("dangerText");
+    });
+    ui.joinCode.addEventListener("keydown", e => { if (e.key === "Enter") joinOnlineRoom(); });
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("beforeunload", closeNetwork);
+
+    ui.movePad.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.movePointerId = e.pointerId;
+      ui.movePad.classList.add("active");
+      try { ui.movePad.setPointerCapture(e.pointerId); } catch {}
+      updateMoveJoystick(e.clientX, e.clientY);
+    }, { passive: false });
+
+    ui.movePad.addEventListener("pointermove", e => {
+      if (touchInput.movePointerId !== e.pointerId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      updateMoveJoystick(e.clientX, e.clientY);
+    }, { passive: false });
+
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => {
+      ui.movePad.addEventListener(type, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        releaseMoveJoystick(e.pointerId);
+      }, { passive: false });
+    });
+
+    ui.fireTouchBtn.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.firePointerId = e.pointerId;
+      touchInput.fire = true;
+      ui.fireTouchBtn.classList.add("pressed");
+      try { ui.fireTouchBtn.setPointerCapture(e.pointerId); } catch {}
+    }, { passive: false });
+
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => {
+      ui.fireTouchBtn.addEventListener(type, e => {
+        if (touchInput.firePointerId !== e.pointerId && type !== "lostpointercapture") return;
+        e.preventDefault();
+        e.stopPropagation();
+        touchInput.firePointerId = null;
+        touchInput.fire = false;
+        ui.fireTouchBtn.classList.remove("pressed");
+      }, { passive: false });
+    });
+
+    ui.skillTouchBtn.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.skillPulse = true;
+      ui.skillTouchBtn.classList.add("pressed");
+      setTimeout(() => ui.skillTouchBtn.classList.remove("pressed"), 100);
+    }, { passive: false });
+
+    ui.ultTouchBtn.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.ultPulse = true;
+      ui.ultTouchBtn.classList.add("pressed");
+      setTimeout(() => ui.ultTouchBtn.classList.remove("pressed"), 100);
+    }, { passive: false });
+
+    [ui.movePad, ui.fireTouchBtn, ui.skillTouchBtn, ui.ultTouchBtn].forEach(el => {
+      el.addEventListener("contextmenu", e => e.preventDefault());
+    });
+
+    window.addEventListener("keydown", e => {
+      if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+      if (!keys[e.code]) justPressed.add(e.code);
+      keys[e.code] = true;
+      if (e.code === "Escape") {
+        if (screenMode === "game" && matchMode === "practice") togglePause();
+        else if (screenMode === "pause") togglePause();
+      }
+    }, { passive: false });
+
+    window.addEventListener("keyup", e => { keys[e.code] = false; });
+    window.addEventListener("blur", () => {
+      Object.keys(keys).forEach(k => keys[k] = false);
+      mouse.down = false;
+      resetTouchControls();
+    });
+
+    canvas.addEventListener("pointermove", e => {
+      const p = canvasToWorld(e.clientX, e.clientY);
+      mouse.x = p.x;
+      mouse.y = p.y;
+    });
+    canvas.addEventListener("pointerdown", e => {
+      if (screenMode === "game") {
+        ensureAudio();
+        const p = canvasToWorld(e.clientX, e.clientY);
+        mouse.x = p.x;
+        mouse.y = p.y;
+        mouse.down = true;
+      }
+    });
+    window.addEventListener("pointerup", () => { mouse.down = false; });
+    canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+    function frame(now) {
+      const dt = Math.min(0.05, Math.max(0, (now - lastFrame) / 1000));
+      lastFrame = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(frame);
+    }
+
+    resizeCanvas();
+    showOnly(ui.menu);
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
