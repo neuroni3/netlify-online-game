@@ -493,6 +493,140 @@
     .tiny { font-size: 12px; color: var(--muted); }
     .dangerText { color: var(--red) !important; }
 
+    /* Puhelimen kosketusohjaimet */
+    #mobileControls {
+      position: absolute;
+      inset: 0;
+      z-index: 35;
+      display: none;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html.touch-device #mobileControls:not(.hidden) { display: block; }
+
+    #movePad {
+      position: absolute;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: 132px;
+      height: 132px;
+      border-radius: 50%;
+      pointer-events: auto;
+      touch-action: none;
+      background: rgba(4, 12, 26, 0.55);
+      border: 2px solid rgba(77, 231, 255, 0.42);
+      box-shadow: 0 10px 34px rgba(0,0,0,.4), inset 0 0 28px rgba(77,231,255,.08);
+      backdrop-filter: blur(7px);
+    }
+
+    #movePad::before, #movePad::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      background: rgba(255,255,255,.11);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    #movePad::before { width: 70%; height: 2px; }
+    #movePad::after { width: 2px; height: 70%; }
+
+    #moveStick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at 35% 30%, #bff7ff, var(--cyan) 42%, #148ca8 100%);
+      border: 2px solid rgba(255,255,255,.72);
+      box-shadow: 0 7px 20px rgba(0,0,0,.38), 0 0 22px rgba(77,231,255,.35);
+      pointer-events: none;
+      transition: box-shadow 90ms ease;
+    }
+
+    #movePad.active #moveStick { box-shadow: 0 7px 20px rgba(0,0,0,.4), 0 0 34px rgba(77,231,255,.68); }
+
+    #mobileActions {
+      position: absolute;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+      width: 194px;
+      height: 154px;
+      pointer-events: none;
+    }
+
+    .touchButton {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      pointer-events: auto;
+      touch-action: none;
+      color: white;
+      font-weight: 1000;
+      text-shadow: 0 2px 4px rgba(0,0,0,.55);
+      border: 2px solid rgba(255,255,255,.55);
+      box-shadow: 0 9px 25px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.35);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 70ms ease, filter 70ms ease, opacity 120ms ease;
+    }
+
+    .touchButton:active, .touchButton.pressed { transform: scale(.88); filter: brightness(1.3); }
+    .touchButton small { display: block; font-size: 9px; line-height: 1; opacity: .9; }
+    .touchButton strong { display: block; font-size: 16px; line-height: 1.05; }
+
+    #fireTouchBtn {
+      right: 0;
+      bottom: 0;
+      width: 92px;
+      height: 92px;
+      background: radial-gradient(circle at 35% 30%, #ffb8ea, var(--pink) 45%, #a81a75 100%);
+      font-size: 17px;
+    }
+
+    #skillTouchBtn {
+      left: 16px;
+      bottom: 0;
+      width: 68px;
+      height: 68px;
+      background: radial-gradient(circle at 35% 30%, #bff7ff, var(--cyan) 45%, #147c98 100%);
+    }
+
+    #ultTouchBtn {
+      left: 59px;
+      top: 0;
+      width: 72px;
+      height: 72px;
+      background: radial-gradient(circle at 35% 30%, #fff8bd, var(--yellow) 45%, #b57c08 100%);
+      color: #172033;
+      text-shadow: none;
+    }
+
+    #ultTouchBtn.notReady { opacity: .55; filter: grayscale(.35); }
+    #skillTouchBtn.notReady { opacity: .62; filter: grayscale(.25); }
+
+    #mobileHint {
+      position: absolute;
+      left: 50%;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      padding: 6px 10px;
+      border-radius: 99px;
+      background: rgba(4,12,26,.58);
+      border: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,255,255,.72);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      pointer-events: none;
+    }
+
     @media (max-width: 760px) {
       #menuCard { padding: 18px; }
       .brandRow { align-items: flex-start; }
@@ -508,6 +642,18 @@
       .ability { width: 72px; min-height: 58px; padding: 7px; }
       .abilityName { font-size: 10px; }
       .abilityCd { font-size: 15px; }
+      html.touch-device #abilityHud { bottom: 166px; transform: translateX(-50%) scale(.86); transform-origin: bottom center; }
+      html.touch-device #roundBanner { top: 30%; }
+      #mobileHint { display: none; }
+    }
+
+    @media (orientation: portrait) and (max-width: 760px) {
+      #movePad { width: 116px; height: 116px; }
+      #moveStick { width: 52px; height: 52px; }
+      #mobileActions { width: 176px; height: 142px; }
+      #fireTouchBtn { width: 84px; height: 84px; }
+      #skillTouchBtn { width: 62px; height: 62px; }
+      #ultTouchBtn { width: 66px; height: 66px; left: 54px; }
     }
   </style>
 </head>
@@ -566,6 +712,7 @@
               <div class="keyTip"><kbd>Hiiri</kbd> = tähtää ja ammu</div>
               <div class="keyTip"><kbd>E</kbd> = erikoiskyky</div>
               <div class="keyTip"><kbd>Q</kbd> = hyper, kun täynnä</div>
+              <div class="keyTip">📱 Puhelimella joystick + isot toimintanapit</div>
             </div>
           </div>
         </div>
@@ -628,6 +775,22 @@
         </div>
       </div>
       <div id="roundBanner">ERÄ 1</div>
+    </div>
+
+    <div id="mobileControls" class="hidden" aria-label="Puhelimen peliohjaimet">
+      <div id="movePad" aria-label="Liikkumisjoystick">
+        <div id="moveStick"></div>
+      </div>
+      <div id="mobileActions">
+        <button id="skillTouchBtn" class="touchButton" type="button" aria-label="Erikoiskyky">
+          <span><strong>E</strong><small id="skillTouchText">KYKY</small></span>
+        </button>
+        <button id="ultTouchBtn" class="touchButton notReady" type="button" aria-label="Hyperkyky">
+          <span><strong>Q</strong><small id="ultTouchText">0%</small></span>
+        </button>
+        <button id="fireTouchBtn" class="touchButton" type="button" aria-label="Ammu">AMMU</button>
+      </div>
+      <div id="mobileHint">Joystick liikuttaa • AMMU tähtää automaattisesti</div>
     </div>
 
     <section id="gameOverScreen" class="screen hidden">
@@ -731,7 +894,15 @@
       overTitle: document.getElementById("gameOverTitle"),
       overText: document.getElementById("gameOverText"),
       rematch: document.getElementById("rematchBtn"),
-      toast: document.getElementById("toast")
+      toast: document.getElementById("toast"),
+      mobileControls: document.getElementById("mobileControls"),
+      movePad: document.getElementById("movePad"),
+      moveStick: document.getElementById("moveStick"),
+      fireTouchBtn: document.getElementById("fireTouchBtn"),
+      skillTouchBtn: document.getElementById("skillTouchBtn"),
+      ultTouchBtn: document.getElementById("ultTouchBtn"),
+      skillTouchText: document.getElementById("skillTouchText"),
+      ultTouchText: document.getElementById("ultTouchText")
     };
 
     const profile = loadProfile();
@@ -756,6 +927,12 @@
     const keys = Object.create(null);
     const justPressed = new Set();
     const mouse = { x: WORLD_W / 2, y: WORLD_H / 2, down: false };
+    const touchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window || window.matchMedia("(pointer: coarse)").matches;
+    document.documentElement.classList.toggle("touch-device", touchCapable);
+    const touchInput = {
+      moveX: 0, moveY: 0, fire: false, skillPulse: false, ultPulse: false,
+      movePointerId: null, firePointerId: null
+    };
 
     let game = createEmptyGame();
     let particles = [];
@@ -1105,6 +1282,7 @@
       game.players[1].rounds = 0;
       ui.connection.textContent = mode === "practice" ? "HARJOITUS" : mode === "host" ? "ONLINE • PALVELIN • ISÄNTÄ" : "ONLINE • PALVELIN • VIERAS";
       ui.hud.classList.remove("hidden");
+      setMobileControlsVisible(true);
       showOnly(null);
       beginRound(1);
       updateHud();
@@ -1154,17 +1332,36 @@
     }
 
     function getLocalInput() {
+      let aimX = mouse.x;
+      let aimY = mouse.y;
+
+      // Puhelimella AMMU-nappi tähtää vastustajaan automaattisesti.
+      if (touchCapable && game.players.length >= 2) {
+        const local = game.players[localPlayerIndex];
+        const enemy = game.players[1 - localPlayerIndex];
+        if (local && enemy) {
+          aimX = enemy.x;
+          aimY = enemy.y;
+        }
+      }
+
       return {
-        up: !!(keys.KeyW || keys.ArrowUp),
-        down: !!(keys.KeyS || keys.ArrowDown),
-        left: !!(keys.KeyA || keys.ArrowLeft),
-        right: !!(keys.KeyD || keys.ArrowRight),
-        fire: mouse.down || !!keys.Space,
-        skill: justPressed.has("KeyE"),
-        ult: justPressed.has("KeyQ"),
-        aimX: mouse.x,
-        aimY: mouse.y
+        up: !!(keys.KeyW || keys.ArrowUp || touchInput.moveY < -0.18),
+        down: !!(keys.KeyS || keys.ArrowDown || touchInput.moveY > 0.18),
+        left: !!(keys.KeyA || keys.ArrowLeft || touchInput.moveX < -0.18),
+        right: !!(keys.KeyD || keys.ArrowRight || touchInput.moveX > 0.18),
+        fire: mouse.down || !!keys.Space || touchInput.fire,
+        skill: justPressed.has("KeyE") || touchInput.skillPulse,
+        ult: justPressed.has("KeyQ") || touchInput.ultPulse,
+        aimX,
+        aimY
       };
+    }
+
+    function clearActionPulses() {
+      justPressed.clear();
+      touchInput.skillPulse = false;
+      touchInput.ultPulse = false;
     }
 
     function update(dt) {
@@ -1177,9 +1374,9 @@
         if (networkTimer >= NETWORK_RATE) {
           networkTimer = 0;
           sendNetwork({ type: "input", input: localInput });
+          clearActionPulses();
         }
         updateClientVisuals(dt);
-        justPressed.clear();
         return;
       }
 
@@ -1195,7 +1392,7 @@
           sendNetwork({ type: "state", state: makeSnapshot() });
         }
       }
-      justPressed.clear();
+      clearActionPulses();
     }
 
     function updateClientVisuals(dt) {
@@ -1590,6 +1787,7 @@
       }
       saveProfile();
       ui.hud.classList.add("hidden");
+      setMobileControlsVisible(false);
       showOnly(ui.over);
       tone(localWon ? 880 : 120, 0.35, 0.055, localWon ? "triangle" : "sawtooth");
     }
@@ -1680,6 +1878,11 @@
       ui.skillAbility.classList.toggle("ready", local.skillCd <= 0);
       ui.ultCd.textContent = local.ult >= 100 ? "VALMIS" : Math.floor(local.ult) + "%";
       ui.ultAbility.classList.toggle("ready", local.ult >= 100);
+
+      ui.skillTouchText.textContent = local.skillCd <= 0 ? "KYKY" : Math.ceil(local.skillCd) + "s";
+      ui.skillTouchBtn.classList.toggle("notReady", local.skillCd > 0);
+      ui.ultTouchText.textContent = local.ult >= 100 ? "VALMIS" : Math.floor(local.ult) + "%";
+      ui.ultTouchBtn.classList.toggle("notReady", local.ult < 100);
     }
 
     function addParticle(x, y, color, life = 0.35, size = 4) {
@@ -1948,6 +2151,7 @@
       game = createEmptyGame();
       particles = [];
       ui.hud.classList.add("hidden");
+      setMobileControlsVisible(false);
       ui.rematch.disabled = false;
       showOnly(ui.menu);
       saveProfile();
@@ -1972,14 +2176,63 @@
       ta.remove();
     }
 
+    function setMobileControlsVisible(visible) {
+      if (!touchCapable) {
+        ui.mobileControls.classList.add("hidden");
+        return;
+      }
+      ui.mobileControls.classList.toggle("hidden", !visible);
+      if (!visible) resetTouchControls();
+    }
+
+    function resetTouchControls() {
+      touchInput.moveX = 0;
+      touchInput.moveY = 0;
+      touchInput.fire = false;
+      touchInput.skillPulse = false;
+      touchInput.ultPulse = false;
+      touchInput.movePointerId = null;
+      touchInput.firePointerId = null;
+      ui.movePad.classList.remove("active");
+      ui.fireTouchBtn.classList.remove("pressed");
+      ui.moveStick.style.transform = "translate(-50%, -50%)";
+    }
+
+    function updateMoveJoystick(clientX, clientY) {
+      const rect = ui.movePad.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const maxDistance = rect.width * 0.31;
+      const distance = Math.hypot(dx, dy);
+      const scale = distance > maxDistance ? maxDistance / distance : 1;
+      const clampedX = dx * scale;
+      const clampedY = dy * scale;
+      touchInput.moveX = Math.max(-1, Math.min(1, clampedX / maxDistance));
+      touchInput.moveY = Math.max(-1, Math.min(1, clampedY / maxDistance));
+      ui.moveStick.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+    }
+
+    function releaseMoveJoystick(pointerId) {
+      if (touchInput.movePointerId !== pointerId && pointerId !== undefined) return;
+      touchInput.movePointerId = null;
+      touchInput.moveX = 0;
+      touchInput.moveY = 0;
+      ui.movePad.classList.remove("active");
+      ui.moveStick.style.transform = "translate(-50%, -50%)";
+    }
+
     function togglePause() {
       if (screenMode !== "game" || matchMode !== "practice") return;
       paused = !paused;
       if (paused) {
         screenMode = "pause";
+        setMobileControlsVisible(false);
         showOnly(ui.pause);
       } else {
         screenMode = "game";
+        setMobileControlsVisible(true);
         showOnly(null);
       }
     }
@@ -2010,6 +2263,78 @@
     window.addEventListener("resize", resizeCanvas);
     window.addEventListener("beforeunload", closeNetwork);
 
+    ui.movePad.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.movePointerId = e.pointerId;
+      ui.movePad.classList.add("active");
+      try { ui.movePad.setPointerCapture(e.pointerId); } catch {}
+      updateMoveJoystick(e.clientX, e.clientY);
+    }, { passive: false });
+
+    ui.movePad.addEventListener("pointermove", e => {
+      if (touchInput.movePointerId !== e.pointerId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      updateMoveJoystick(e.clientX, e.clientY);
+    }, { passive: false });
+
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => {
+      ui.movePad.addEventListener(type, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        releaseMoveJoystick(e.pointerId);
+      }, { passive: false });
+    });
+
+    ui.fireTouchBtn.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.firePointerId = e.pointerId;
+      touchInput.fire = true;
+      ui.fireTouchBtn.classList.add("pressed");
+      try { ui.fireTouchBtn.setPointerCapture(e.pointerId); } catch {}
+    }, { passive: false });
+
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => {
+      ui.fireTouchBtn.addEventListener(type, e => {
+        if (touchInput.firePointerId !== e.pointerId && type !== "lostpointercapture") return;
+        e.preventDefault();
+        e.stopPropagation();
+        touchInput.firePointerId = null;
+        touchInput.fire = false;
+        ui.fireTouchBtn.classList.remove("pressed");
+      }, { passive: false });
+    });
+
+    ui.skillTouchBtn.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.skillPulse = true;
+      ui.skillTouchBtn.classList.add("pressed");
+      setTimeout(() => ui.skillTouchBtn.classList.remove("pressed"), 100);
+    }, { passive: false });
+
+    ui.ultTouchBtn.addEventListener("pointerdown", e => {
+      if (screenMode !== "game") return;
+      e.preventDefault();
+      e.stopPropagation();
+      ensureAudio();
+      touchInput.ultPulse = true;
+      ui.ultTouchBtn.classList.add("pressed");
+      setTimeout(() => ui.ultTouchBtn.classList.remove("pressed"), 100);
+    }, { passive: false });
+
+    [ui.movePad, ui.fireTouchBtn, ui.skillTouchBtn, ui.ultTouchBtn].forEach(el => {
+      el.addEventListener("contextmenu", e => e.preventDefault());
+    });
+
     window.addEventListener("keydown", e => {
       if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
       if (!keys[e.code]) justPressed.add(e.code);
@@ -2024,6 +2349,7 @@
     window.addEventListener("blur", () => {
       Object.keys(keys).forEach(k => keys[k] = false);
       mouse.down = false;
+      resetTouchControls();
     });
 
     canvas.addEventListener("pointermove", e => {
